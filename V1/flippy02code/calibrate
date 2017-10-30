@@ -1,0 +1,1429 @@
+#include <avr/eeprom.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include <stdlib.h>
+#include <util/delay.h>
+#include <avr/sleep.h>
+
+//some defined constants
+#define time_a 252
+#define time_b 266
+#define timeb_half time_b/2
+
+//used locations in eeprom
+#define ee_OSCCAL 0x001  // rc calibration value in eeprom, to be loaded to OSCCAL at startup
+#define ee_CW_IN_PLACE 0x004  //motor calibration data in epromm
+#define ee_CCW_IN_PLACE 0x008  //motor calibration data in epromm
+#define ee_CW_IN_STRAIGHT 0x00B  //motor calibration data in epromm
+#define ee_CCW_IN_STRAIGHT 0x013  ///motor calibration data in epromm
+#define ee_SENSOR_LOW 0x20  //low gain sensor calibration data in epromm
+#define ee_SENSOR_HIGH 0x50  //high-gain calibration data in epromm
+#define ee_ROLE 0x80  //Role asignment
+
+//main loop functions
+void comm_test_2(void);
+void calibrate_ir(void);
+void sensor_test_1();
+void comm_test_3(void);
+
+//usefull lower level functions
+void kprinti(int);
+void kprinti_nr(int);
+void kprint_lf(void);
+void kprints(char *);
+void set_color(int8_t ,int8_t ,int8_t );
+void enter_sleep(void);
+int measure_voltage(void);
+int measure_charge_status(void);
+int send_message(int,int,int);
+int get_message(void);
+
+
+		static int state=0;
+static volatile uint8_t role;
+static volatile int sensor_cal_data_low[14];
+static volatile int sensor_cal_data_high[14];
+
+static volatile int incoming_byte=0;
+static volatile  int adc_high_gain;
+static volatile  int adc_low_gain;
+static volatile uint8_t incoming_byte_value;
+static volatile int message_incoming=0;
+static volatile int incoming_message[5];
+static volatile int leading_bit=1;
+static volatile int storage=0;
+static volatile int txvalue_buffer[6][4];
+static volatile int txvalue_buffer_pointer;
+static volatile int message_rx[6];
+static volatile int clock_1=0;
+static volatile uint16_t clock_2=0;
+static volatile int clock_3=0;
+
+
+static volatile int counts=0;
+static volatile uint8_t	cw_in_place;
+static volatile uint8_t	ccw_in_place;
+static volatile uint8_t	cw_in_straight;
+static volatile uint8_t	ccw_in_straight;
+
+
+
+static volatile int special_mode_message=3;
+static volatile int special_mode=1;
+static volatile int special_message_buffer[3];//
+static volatile int special_message_pointer=0;
+static volatile int wakeup=0;
+
+static volatile uint8_t timer_counts=0;
+static volatile int timer_s_m=0;
+
+static volatile uint8_t message_tx0=200;
+static volatile uint8_t message_tx1=200;
+static volatile uint8_t message_tx2=200;
+
+static volatile uint8_t enable_tx=1;
+static volatile uint8_t run_program=0;
+
+static volatile int commvalues[5]={0,0,0,0,0};
+static volatile int commcounts[5]={0,0,0,0,0};
+
+static volatile int randseed=0;
+static volatile int tx_clock=0;
+
+
+
+static volatile int time_since_last =0;
+
+//function inline macros
+#define get_message()											\
+{																\
+	int count_pointer=0;										\
+	int count_pointer_a=txvalue_buffer_pointer;					\
+	message_rx[5]=0;											\
+	while(count_pointer<4)										\
+	{															\
+		if(count_pointer_a==0)									\
+			count_pointer_a=3;									\
+		else													\
+			count_pointer_a--;									\
+																\
+		if(txvalue_buffer[5][count_pointer_a]==1)				\
+		{														\
+			cli();												\
+			message_rx[0]=txvalue_buffer[0][count_pointer_a];	\
+			message_rx[1]=txvalue_buffer[1][count_pointer_a];	\
+			message_rx[2]=txvalue_buffer[2][count_pointer_a];	\
+			message_rx[3]=txvalue_buffer[3][count_pointer_a];	\
+			message_rx[4]=txvalue_buffer[4][count_pointer_a];	\
+			sei();												\
+			message_rx[5]=1;									\
+			txvalue_buffer[5][count_pointer_a]=0;				\
+			break;												\
+																\
+																\
+																\
+		}														\
+																\
+		count_pointer++;										\
+																\
+	}															\
+																\
+}	
+
+#define set_motor(cw,ccw) OCR2A=cw;OCR2B=ccw;
+#define message_out(tx0,tx1,tx2) message_tx0=tx0;message_tx1=tx1;message_tx2 &= 0xfe ;message_tx2=tx2;															\
+
+ISR(WDT_vect)
+{
+
+	
+
+
+	
+	//wake up 
+	asm volatile("wdr\n\t");
+	DDRD |= (1<<2);//make power supply control pin an output
+	PORTD |= (1<<2);//turn on the power supply	  
+	ADCSRA |= (1<<ADEN);//turn on the a/d converter
+	
+	//disable watch dog timer
+	WDTCSR |= (1<<WDCE)|(1<<WDE);
+	WDTCSR = 0;
+
+
+	//check to see if message is incoming
+	sei();
+	set_color(7,7,7);
+	_delay_ms(10);
+	set_color(0,0,0);
+	
+
+
+
+	
+	
+}
+
+ISR(TIMER0_COMPA_vect)//timer interrupt attempts to send messages every fixed amount of time
+{
+	static int clock_0=0;
+	tx_clock+=time_since_last;	
+	clock_0+=time_since_last;
+	clock_1+=time_since_last;
+	clock_3+=time_since_last;
+
+	clock_2+=time_since_last/100;
+	if(clock_2>32000)
+		clock_2=0;
+	time_since_last=0xff;	
+
+	OCR0A=0xff;
+
+	if(tx_clock>1275)
+		if(enable_tx==1)
+		{
+			int return_value;
+	
+			
+
+		
+			if(message_incoming==0)
+			{
+				return_value=send_message(message_tx0,message_tx1,message_tx2);
+				
+			}
+			else
+				return_value=3;
+	
+	
+			if(return_value==0)//collision
+			{
+			
+				time_since_last=rand()%255;
+				OCR0A=time_since_last;//set next try to be a random time between 0.000128 and 0.03264 seconds later
+
+			}
+			else if(return_value==1)//sucessfull send
+			{
+		
+				tx_clock=0;
+			
+			}
+			else//channel aready in use
+			{
+				time_since_last=rand()%255;
+				OCR0A=time_since_last;//set next try to be a random time between 0.000128 and 0.03264 seconds later
+
+			}
+	
+	
+
+		}
+
+	if(clock_0>2295)
+	{
+		clock_0=0;
+		special_message_buffer[0]=0;
+		special_message_buffer[1]=0;
+		special_message_buffer[2]=0;
+		special_message_pointer=0;
+	}
+
+
+
+	
+
+}
+
+ISR(TIMER1_COMPA_vect)//triggers when message should be complete
+{
+	leading_bit=1;
+
+	
+		
+	if(incoming_byte==0)
+	{
+		
+		//store adc value
+		adc_low_gain=ADCW;
+	
+		
+		//set adc to trigger converstion on next compairitor interrupt
+		ADMUX=5;
+		ADCSRA = (1<<ADEN)  | (1<<ADATE) | (1<<ADIF) |  (1<<ADPS1);//| (1<<ADIE);// | (1<<ADPS0); //enable a/d, have it trigger converstion start on a compairitor interrrupt.Note: turn off for power saving
+		ADCSRB = (1<<ADTS0);//set compairitor to be trigger source
+
+
+		incoming_message[0]=incoming_byte_value;
+		incoming_byte=1;
+		if(incoming_byte_value!=0)
+		{	
+			
+			incoming_message[0]=0;
+			incoming_message[1]=0;
+			incoming_message[2]=0;
+			incoming_message[3]=0;
+			incoming_message[4]=0;
+			ADMUX=5;
+			ADCSRA = (1<<ADEN)  | (1<<ADATE) |  (1<<ADIF) |  (1<<ADPS1) ;// |(1<<ADIE);//| (1<<ADPS0); //enable a/d, have it trigger converstion start on a compairitor interrrupt.Note: turn off for power saving
+			ADCSRB = (1<<ADTS0);//set compairitor to be trigger source
+
+
+			TCCR1B=0;//turn counter1 off
+			TCNT1H=0;//reset counter value to 0
+			TCNT1L=0;//reset counter value to 0
+			incoming_byte=0;
+			message_incoming=0;//no longer receiving a message
+			time_since_last+=3;//take into account time that timer0 was paused
+			TCCR0B=0x05;//turn timer0 back on
+
+		
+		}
+		randseed+=ADCW;
+	}
+	else if(incoming_byte==1)
+	{
+		adc_high_gain=ADCW;
+		incoming_message[1]=incoming_byte_value;
+		
+		incoming_byte=2;
+		randseed+=ADCW;
+	}
+	else if(incoming_byte==2)
+	{
+		incoming_message[2]=incoming_byte_value;
+		incoming_byte=3;
+	}	
+	else if(incoming_byte==3)
+	{
+		incoming_message[3]=incoming_byte_value;
+		incoming_byte=4;
+	}	
+	else if(incoming_byte==4)
+	{	
+		incoming_message[4]=incoming_byte_value;
+		incoming_byte=0;
+
+	
+
+		//store data in buffer
+		uint8_t check=incoming_message[1]+incoming_message[2]+incoming_message[3]+128;
+		int checksum_good=0;
+		if((check==(incoming_message[4]))&&(incoming_message[0]==0))
+		{
+			//set_color(0,1,0);
+			checksum_good=1;
+
+			
+			//compute distance from a/d readings based on sensor calibration values
+			int index_low=-1;
+			uint8_t distance_mm_low=255;
+			int index_high=-1;
+			uint8_t distance_mm_high=255;
+			uint8_t distance;
+
+			//compute distance for high gain and low gain when required (use low gain when high gain >900, both if between 900 and 700, high if less than 700)
+			if(adc_high_gain<900)//use high gain
+			{
+				if(adc_high_gain>sensor_cal_data_high[0])
+				{
+					distance_mm_high=0;
+	
+				}
+				else
+				{
+
+
+					for(int a=1;a<14;a++)
+					{
+						if(adc_high_gain>sensor_cal_data_high[a])
+						{
+
+							index_high=a;
+
+							break;
+						}
+
+					}
+					if(index_high==-1)
+					{
+						distance_mm_high=90;
+						
+				
+			
+					}
+					else
+					{
+					
+			
+						double slope=(sensor_cal_data_high[index_high]-sensor_cal_data_high[index_high-1])/0.5;
+
+						double b=(double)sensor_cal_data_high[index_high]-(double)slope*((double)index_high*(double)0.5+(double)0.0);
+
+						b=(((((double)adc_high_gain-(double)b)*(double)10)));
+						b=((int)((int)b/(int)slope));
+						distance_mm_high=b;
+							
+
+					}
+
+				}
+			
+			}
+			if(adc_high_gain>700)//use low gain
+			{
+				if(adc_low_gain>sensor_cal_data_low[0])
+				{
+					distance_mm_low=0;
+				
+				}
+				else
+				{
+					for(int a=1;a<14;a++)
+					{
+						if(adc_low_gain>sensor_cal_data_low[a])
+						{
+
+							index_low=a;
+
+							break;
+						}
+
+					}
+					if(index_low==-1)
+					{
+						distance_mm_low=90;
+			
+					}
+					else
+					{
+						double slope=(sensor_cal_data_low[index_low]-sensor_cal_data_low[index_low-1])/0.5;
+
+						double b=(double)sensor_cal_data_low[index_low]-(double)slope*((double)index_low*(double)0.5+(double)0.0);
+
+						b=(((((double)adc_low_gain-(double)b)*(double)10)));
+						b=((int)((int)b/(int)slope));
+						distance_mm_low=b;
+							
+
+					}
+
+				}
+			
+
+			}
+			
+			if((distance_mm_low!=255)&&(distance_mm_high!=255))
+			{
+				distance=((double)distance_mm_high*(900.0-adc_high_gain)+(double)distance_mm_low*(adc_high_gain-700.0))/200.0;
+			
+			}
+			else if(distance_mm_low!=255)
+			{
+				distance=distance_mm_low;
+		
+			}
+			else 
+			{
+				distance=distance_mm_high;
+			
+			}
+			
+			distance+=33;
+			
+
+
+		
+			//write in oldest txvalue_buffer location
+			txvalue_buffer[0][txvalue_buffer_pointer]=incoming_message[1];
+			txvalue_buffer[1][txvalue_buffer_pointer]=incoming_message[2];
+			txvalue_buffer[2][txvalue_buffer_pointer]=incoming_message[3];
+			txvalue_buffer[3][txvalue_buffer_pointer]=adc_low_gain;
+		//	txvalue_buffer[3][txvalue_buffer_pointer]=(uint8_t)distance;
+			txvalue_buffer[4][txvalue_buffer_pointer]=adc_high_gain;
+			txvalue_buffer[5][txvalue_buffer_pointer]=1;//mark as new entry
+		//	kprints("goodcheck");
+/*	kprinti(incoming_message[1]);
+			
+			kprinti(incoming_message[2]);
+			
+			kprinti(incoming_message[3]);
+			
+			kprinti(incoming_message[4]);
+			kprinti(adc_low_gain);
+			kprinti(adc_high_gain);*/
+
+			//increment buffer pointer
+			txvalue_buffer_pointer++;
+		
+			if(txvalue_buffer_pointer==4)
+				txvalue_buffer_pointer=0;
+			
+
+
+		
+		
+
+		
+			
+			
+		}
+		else
+		{
+			checksum_good=0;
+		//	kprints("badchecksum");
+		//	kprinti(incoming_message[1]);
+			
+		//	kprinti(incoming_message[2]);
+			
+		//	kprinti(incoming_message[3]);
+			
+		//	kprinti(incoming_message[4]);
+			//set_color(1,0,0);
+	
+		}	
+
+	
+		if(checksum_good==1)
+			if((incoming_message[3]&(0x01))!=0)
+				if(incoming_message[2]==0)
+					if(incoming_message[1]<9)
+						if(special_mode_message!=incoming_message[1])
+						{
+							if(incoming_message[1]!=0x03)
+							{
+								for(int a=0;a<special_message_pointer;a++)
+								{
+									if(special_message_buffer[a]!=incoming_message[1])
+									{
+
+										special_message_buffer[0]=0;
+										special_message_buffer[1]=0;
+										special_message_buffer[2]=0;
+										special_message_pointer=0;
+
+									}
+
+								}
+								if(special_message_pointer<3)
+								{
+									special_message_buffer[special_message_pointer]=incoming_message[1];
+									special_message_pointer++;
+
+
+								}
+
+								if(special_message_pointer==3)
+								{
+									special_mode_message=incoming_message[1];
+									special_mode=1;  // special mode will be entered when reached in main loop
+									special_message_buffer[0]=0;
+									special_message_buffer[1]=0;
+									special_message_buffer[2]=0;
+									special_message_pointer=0;
+								}
+						
+
+							}
+
+
+							
+
+
+							if(incoming_message[1]==0x03)
+							{
+								wakeup=1;
+								special_mode_message=incoming_message[1];
+								special_mode=1;  // special mode will be entered when reached in main loop
+					
+							}
+						}
+				
+	
+						
+
+		
+		//prepare a/d for next communication
+		ADMUX=5;
+		ADCSRA = (1<<ADEN)  | (1<<ADATE) |  (1<<ADIF) |  (1<<ADPS1)  ;//|(1<<ADIE);//| (1<<ADPS0); //enable a/d, have it trigger converstion start on a compairitor interrrupt.Note: turn off for power saving
+		ADCSRB = (1<<ADTS0);//set compairitor to be trigger source
+
+		message_incoming=0;//no longer receiving a message
+
+	
+
+		incoming_message[0]=0;
+		incoming_message[1]=0;
+		incoming_message[2]=0;
+		incoming_message[3]=0;
+		incoming_message[4]=0;
+
+
+		TCCR1B=0;//turn counter1 off
+		TCNT1H=0;//reset counter value to 0
+		TCNT1L=0;//reset counter value to 0
+		time_since_last+=12;//take into account time that timer0 was paused
+		TCCR0B=0x05;//turn timer0 back on
+
+
+		
+	}
+	
+
+
+	
+	
+		
+
+
+
+
+	
+
+	
+
+	incoming_byte_value=0;//reset incoming byte value for next byte
+	
+
+	
+}
+
+ISR(ANALOG_COMP_vect)//triggers when a pulse is seen on the IR receiver
+{
+	//determine what bit the ir pulse is, based on timer1 value
+	
+		int temp=TCNT1;
+		TCNT1H=0;//reset counter value to 0
+		TCNT1L=0;
+		TCCR1A=0x00;
+		TCCR1B=0x01;
+	
+
+		counts=temp;
+
+	//kprinti(counts);
+
+
+}
+
+int main(void)
+{
+
+	
+
+	/////////////////////////
+	//starting initalizations
+	/////////////////////////
+	
+
+
+	//port initalizations
+	DDRB=0;
+	PORTB=0;
+	DDRC=0;
+	PORTC=0;
+	DDRD=0;
+	PORTD=0;
+
+	
+
+
+	//set up rc oscillator
+	//OSCCAL=eeprom_read_byte((uint8_t *)ee_OSCCAL);//read rc calibration data from eeprom, and write it to OSCCAL
+	//OSCCAL=0x56;//new calibration value (11/22)
+
+	//initalize uart for debugging to a terminal
+	DDRD |= (1<<1);
+	UBRR0=1;//256000 baud
+	UCSR0A = 0;
+	UCSR0B |= (1<<TXEN0);
+	UCSR0C |= (1<<UCSZ01) | (1<<UCSZ00);
+
+	//initalize analog comparator
+	ACSR |= (1<<ACIE) | (1<<ACIS1)| (1<<ACIS0)  ;//trigger interrupt on rising output edge
+	DIDR1=3;
+
+	//initalize adc
+	ADMUX = 5;//choose analog refrence pin AREF
+	ADCSRA = (1<<ADEN) | (1<<ADSC) |  (1<<ADPS1) | (1<<ADPS0); //enable a/d, have it trigger converstion start on a compairitor interrrupt.Note: turn off for power saving
+	
+	//initalize timer1
+	TCCR1A=0x00;
+	TCCR1B=0x01;
+	TIMSK1=0x02;
+	OCR1AH=0x32;//high byte for timer compair interrupt
+	OCR1AL=0x00;//low byte for timer compair interrupt	
+
+	///////////////////
+	//main control loop
+	///////////////////
+	kprints("starting  ");
+	sei();
+
+	
+
+
+	while(1)
+	{
+		/////////////////////////////////////////////////////////////////////////////////////
+		//user program code goes here.  this code needs to exit in a resonable amount of time
+		//so the special message controller can also run
+		/////////////////////////////////////////////////////////////////////////////////////
+
+	//	kprints("Starting     ");
+		int good=OSCCAL;
+
+		static int tx_calibration_value=-1;
+	
+			static int values[256];
+				static int clocke=0;
+				int index=0;
+				int index_error=9999;
+				
+				int min=39;
+				int countsa=0;
+				while(min>20)
+				{
+
+					for(int i=0;i<256;i++)
+					{
+						clocke=0;
+						while(clocke==0)
+						{
+							_delay_ms(3);
+							OSCCAL=i ;//for v.5#2
+							_delay_ms(6);
+							clocke=counts;
+					
+					
+								OSCCAL=good;
+								kprinti(i);
+								kprinti(clocke);
+								kprints("               ");
+								_delay_ms(3);
+								values[i]=clocke;
+						
+						}
+
+					}
+
+				
+
+					for(int i=0;i<256;i++)
+					{
+
+
+						if(((int)abs(values[i]-8000))<index_error)
+						{
+							index=i;
+							index_error=(int)abs(values[i]-8000);
+
+						}
+
+					}
+					kprints("goodclockis");
+					kprinti(index);
+					kprinti(index_error);
+					min=index_error;
+					kprinti(countsa);
+					
+					kprints("              ");
+			
+					countsa++;
+					if(countsa>3)
+						while(1)
+							set_color(2,0,0);
+
+				}
+
+									
+			
+					eeprom_write_byte((uint8_t *)ee_OSCCAL,index);
+
+
+					_delay_ms(100);
+					kprints("calibration    ");
+					kprints("complete        ");
+					OSCCAL=index;
+					
+					kprinti(index);
+					kprinti(index_error);
+					kprints("              ");
+
+				while(1);
+
+	
+		
+
+	}
+
+	
+}
+
+void kprints(char *i)//print string
+{
+	
+	//for usage, kprints("hello world") up to 10 characters
+	for(int a=0;a<10;a++)
+	{
+		UDR0=(i[a]);
+			while(!(UCSR0A & (1<<UDRE0)));
+	
+
+	}
+
+	UDR0=(0x0A);
+
+	while(!(UCSR0A & (1<<UDRE0)));
+	UDR0=(0x0d);
+
+	while(!(UCSR0A & (1<<UDRE0)));
+
+
+
+
+}
+void kprinti(int i)//print integer
+{
+	
+	char buffer[10]; 
+	for(int a=0;a<10;a++)
+		buffer[a]=0;
+
+	itoa(i,buffer,10);
+	for(int a=0;a<10;a++)
+	{
+			UDR0=(buffer[a]);
+			while(!(UCSR0A & (1<<UDRE0)));
+	}
+
+	UDR0=(0x0a);
+	while(!(UCSR0A & (1<<UDRE0)));
+	UDR0=(0x0d);
+	while(!(UCSR0A & (1<<UDRE0)));
+
+
+}
+void kprinti_nr(int i)
+{
+	
+	char buffer[10]; 
+	for(int a=0;a<10;a++)
+		buffer[a]=0;
+
+	itoa(i,buffer,10);
+	for(int a=0;a<10;a++)
+	{
+			UDR0=(buffer[a]);
+			while(!(UCSR0A & (1<<UDRE0)));
+	}
+
+	UDR0=(0x20);
+	while(!(UCSR0A & (1<<UDRE0)));
+
+
+
+}
+void kprint_lf(void)
+{
+	
+	
+
+	UDR0=(0x0a);
+	while(!(UCSR0A & (1<<UDRE0)));
+
+
+
+}
+int send_message(int a,int b,int c)
+{
+	sei();
+	
+	
+	
+
+	if(message_incoming==1)
+	{
+	
+		return(2);
+
+	}
+
+	DDRD |= (1<<4);
+	uint16_t data_out[4];
+	uint8_t data_to_send[4]={a,b,c,255};
+//	uint8_t data_to_send[4]={255,255,255,255};
+	
+
+	//prepare data checksum to send
+	data_to_send[3]=data_to_send[2]+data_to_send[1]+data_to_send[0]+128;
+
+	//prepare data to send
+	for(int i=0;i<4;i++)
+	{
+		data_out[i]=(data_to_send[i] & (1<<0))*128 + 
+				(data_to_send[i] & (1<<1))*32 + 
+				(data_to_send[i] & (1<<2))*8 + 
+				(data_to_send[i] & (1<<3))*2+ 
+				(data_to_send[i] & (1<<4))/2+ 
+				(data_to_send[i] & (1<<5))/8 + 
+				(data_to_send[i] & (1<<6))/32 + 
+				(data_to_send[i] & (1<<7))/128;
+
+		data_out[i]=data_out[i]<<1;
+		data_out[i]++;
+	}
+
+	uint8_t collision_detected=0;
+	cli();//start critical
+	if(message_incoming==0)//no incoming message detected
+	{
+		//send start pulse
+		PORTD |= (1<<4);
+		asm volatile("nop\n\t");
+		asm volatile("nop\n\t");
+		PORTD &= ~(1<<4);
+
+		//wait for own signal to die down
+		for(int k=0;k<53;k++)
+			asm volatile("nop\n\t");
+
+
+		//check for collision
+		for(int k=0;k<193;k++)
+		{
+			if((ACSR & (1<<ACO))>0)
+			{
+	
+				collision_detected=1;
+				//ensure led is off
+				PORTD &= ~(1<<4);
+				sei();//end critical
+				return(3);
+
+			}
+			if((ACSR & (1<<ACO))>0)
+			{
+	
+				collision_detected=1;
+				//ensure led is off
+				PORTD &= ~(1<<4);
+				sei();//end critical
+				return(4);
+
+			}
+				
+	
+		}	
+
+		if(collision_detected==0)
+			for(int byte_sending=0;byte_sending<4;byte_sending++)
+			{
+				int i=8;
+				while(i>=0)
+				{
+
+					if(data_out[byte_sending] & 1)
+					{
+						PORTD |= (1<<4);
+						asm volatile("nop\n\t");
+						asm volatile("nop\n\t");
+		
+					}
+					else
+					{
+
+						PORTD &= ~(1<<4);
+						asm volatile("nop\n\t");
+						asm volatile("nop\n\t");
+	
+					}
+
+						PORTD &= ~(1<<4);
+						for(int k=0;k<35;k++)
+						{
+							asm volatile("nop\n\t");
+						}
+
+						data_out[byte_sending]=data_out[byte_sending]>>1;
+						i--;
+				}
+			}
+	}
+	else//channel was in use before starting
+	{
+		//ensure led is off
+		PORTD &= ~(1<<4);
+	
+		sei();//end critical
+		return(5);
+	}
+	//ensure led is off
+	PORTD &= ~(1<<4);
+	if(collision_detected==0)
+	{
+		//wait for own signal to die down
+		for(int k=0;k<50;k++)
+			asm volatile("nop\n\t");
+
+			ACSR |= (1<<ACI);
+
+		sei();//end critical
+		return(1);
+	}
+	else
+	{
+	
+		sei();//end critical
+		return(0);
+	}
+
+	
+	
+}
+int measure_voltage( void)
+{
+	while((ADCSRA&(1<<ADSC))==1);
+	cli();
+	ADMUX=6;
+	ADCSRA |= (1<<ADSC);//start adc
+	while((ADCSRA&(1<<ADIF))==0);
+	sei();
+
+	int voltage=(.0059*(double)ADCW+.0156)*100.0;
+
+	return(voltage);
+}
+int measure_charge_status(void)
+{
+
+	if(PINC & (1<<5))
+	{
+		set_color(0,0,0);
+		return(0);
+	}
+	else
+	{
+		set_color(1,0,0);
+		_delay_ms(200);
+		set_color(2,0,0);
+		_delay_ms(200);
+		set_color(3,0,0);
+		_delay_ms(200);
+		set_color(4,0,0);
+		_delay_ms(200);
+		set_color(5,0,0);
+		_delay_ms(200);
+		set_color(6,0,0);
+		_delay_ms(200);
+		set_color(7,0,0);
+		_delay_ms(200);
+		set_color(0,0,0);
+		_delay_ms(200);
+		return(1);
+	}
+}
+
+void enter_sleep(void)
+{
+	wakeup=0;
+	cli();
+	//set registers for sleep mode
+	SMCR= (1<<SM1);
+	MCUSR=0;
+	WDTCSR |= (1<<WDCE)|(1<<WDE);
+	WDTCSR = (1<<WDIE) | (1<<WDP3)| (1<<WDP0);
+
+	//this turns off all the devices, and then enters an 8s deep sleep (55ua current draw)
+	DDRB=0;
+	PORTB=0;
+	DDRC=0;
+	PORTC=0;
+	DDRD=0;
+	PORTD=0;
+	sei();
+	ADCSRA &= ~(1<<ADEN); //turn off a2d
+
+	asm volatile("wdr\n\t");
+	SMCR|= (1<<SE);
+	asm volatile("sleep\n\t");
+	sei();
+
+	while(wakeup==0)//go back to sleep
+	{
+	
+		//set registers for sleep mode
+		SMCR= (1<<SM1);
+		MCUSR=0;
+		WDTCSR |= (1<<WDCE)|(1<<WDE);
+		WDTCSR = (1<<WDIE) | (1<<WDP3)| (1<<WDP0);
+	
+		//this turns off all the devices, and then enters an 8s deep sleep (55ua current draw)
+		DDRB=0;
+		PORTB=0;
+		DDRC=0;
+		PORTC=0;
+		DDRD=0;
+		PORTD=0;
+		sei();
+		ADCSRA &= ~(1<<ADEN); //turn off a2d
+		asm volatile("wdr\n\t");
+		SMCR|= (1<<SE);
+		asm volatile("sleep\n\t");
+		sei();
+
+	}
+
+	//re enable motors
+	DDRD |= (1<<3);
+	DDRB |= (1<<3);
+	TCCR2A |= (1<<COM2A1) | (1<<COM2B1) | (1<<WGM20);
+	TCCR2B |= (1<<CS01); //prescaler set to /8
+	OCR2B = 0x00;//start with motor off
+	OCR2A = 0x00;//start with motor off
+
+
+}
+void set_color(int8_t red,int8_t green,int8_t blue)
+{
+//port assignments from pcb	
+//BLUE
+//PB1 msb
+
+//GREEN
+//PD2 msb
+//PC5
+//PC4 lsb
+
+//RED
+//PB6 msb
+//PB7
+//PD5 lsb
+
+	
+	if((blue%2)!=0)//lsb
+		DDRC |= (1<<4);
+	else
+		DDRC &= ~(1<<4);
+
+	if(blue>=4 ) //msb
+		DDRC |= (1<<2);
+	else
+		DDRC &= ~(1<<2);
+
+	blue=(blue>>1);
+	if((blue%2)!=0)
+		DDRC |= (1<<3);
+	else
+		DDRC &= ~(1<<3);
+
+
+
+	
+
+	
+	if((red%2)!=0)//lsb
+		DDRD |= (1<<5);
+	else
+		DDRD &= ~(1<<5);
+
+
+	if(red>=4)//msb
+		DDRB |= (1<<6);
+	else
+		DDRB &= ~(1<<6);
+
+	red=(red>>1);
+	if((red%2)!=0)
+		DDRB |= (1<<7);
+	else
+		DDRB &= ~(1<<7);
+
+
+	
+	if((green%2)!=0)//lsb
+		DDRB |= (1<<2);
+	else
+		DDRB &= ~(1<<2);
+
+
+	if(green>=4)//msb
+		DDRB |= (1<<0);
+	else
+		DDRB &= ~(1<<0);
+
+	green=(green>>1);
+	if((green%2)!=0)
+		DDRB |= (1<<1);
+	else
+		DDRB &= ~(1<<1);
+
+
+}
+////////////////////////
+//some testing functions
+////////////////////////
+
+void comm_test_3()
+{
+	get_message();
+	if(message_rx[5]==1)
+	{
+		if(message_rx[4]>204)
+			set_color(0,1,0);
+		else if(message_rx[4]<194)
+			set_color(1,0,0);
+		else
+			set_color(0,0,0);
+	
+	
+	
+	}
+	else
+		set_color(0,0,2);
+
+}
+void calibrate_ir(void)
+{
+	
+	static int  rx1,rx2,rx3;
+	int goodvalue=0;
+	int count_pointer=0;
+	int count_pointer_a=txvalue_buffer_pointer;
+	int adcl,adch;
+	
+	while(count_pointer<4)
+	{
+		if(count_pointer_a==0)
+			count_pointer_a=3;
+		else
+			count_pointer_a--;
+
+		if(txvalue_buffer[5][count_pointer_a]==1)
+		{
+			//use this buffer entry
+			rx1=txvalue_buffer[0][count_pointer_a];
+			rx2=txvalue_buffer[1][count_pointer_a];
+			rx3=txvalue_buffer[2][count_pointer_a];
+			adch=txvalue_buffer[3][count_pointer_a];
+			adcl=txvalue_buffer[4][count_pointer_a];
+			txvalue_buffer[5][count_pointer_a]=0;//clear that entry
+			goodvalue=1;
+			break;
+
+
+
+		}
+
+		count_pointer++;
+
+
+	}
+	if(goodvalue==1)
+	{
+		if((rx1==rx2)&&(rx3==0))
+		{
+			if(rx1==1)
+			{
+
+				commvalues[0]+=adch;
+				commcounts[0]++;
+			}
+			else if(rx1==2)
+			{
+				commvalues[1]+=adch;
+				commcounts[1]++;
+
+			}
+			else if(rx1==3)
+			{
+
+				commvalues[2]+=adch;
+				commcounts[2]++;
+
+
+			}
+			else if(rx1==4)
+			{
+				commvalues[3]+=adch;
+				commcounts[3]++;
+
+
+			}
+		
+
+
+
+
+
+		}
+	}
+
+}
+void comm_test_2(void)
+{
+	static int  rx1,rx2,rx3;
+	int goodvalue=0;
+	int count_pointer=0;
+	int count_pointer_a=txvalue_buffer_pointer;
+	int adcl,adch;
+	
+	while(count_pointer<4)
+	{
+		if(count_pointer_a==0)
+			count_pointer_a=3;
+		else
+			count_pointer_a--;
+
+		if(txvalue_buffer[5][count_pointer_a]==1)
+		{
+			//use this buffer entry
+			rx1=txvalue_buffer[0][count_pointer_a];
+			rx2=txvalue_buffer[1][count_pointer_a];
+			rx3=txvalue_buffer[2][count_pointer_a];
+			adch=txvalue_buffer[3][count_pointer_a];
+			adcl=txvalue_buffer[4][count_pointer_a];
+			txvalue_buffer[5][count_pointer_a]=0;//clear that entry
+			goodvalue=1;
+			break;
+
+
+
+		}
+
+		count_pointer++;
+
+
+	}
+	if(goodvalue==1)
+	{
+		static uint8_t a,b,c;
+		static uint8_t a1;
+	
+		static int counter=0;
+
+		a1=a+128;
+		
+
+
+		
+			if(rx1!=a)
+			{
+				counter=0;
+			//	set_color(7,0,0);
+			//	_delay_ms(2);
+			//	set_color(0,0,0);
+			//	kprints("value error      ");
+				//kprinti(a);
+				//kprinti(incoming_message[1]);
+			}
+			else if(rx2!=b)
+			{
+
+				counter=0;
+				//	set_color(7,0,0);
+			//	_delay_ms(2);
+				//set_color(0,0,0);
+				
+			//	kprints("value error      ");
+
+			}
+			else if(rx3!=c)
+			{
+
+				counter=0;
+			//		set_color(7,0,0);
+				//_delay_ms(2);
+			//	set_color(0,0,0);
+				
+			//	kprints("value error      ");
+
+			}
+			else if(b!=a1)
+			{
+
+				counter=0;
+				//	set_color(7,0,0);
+			//	_delay_ms(2);
+				//set_color(0,0,0);
+				
+			//	kprints("value error      ");
+
+			}
+			else if((adch<950)||(adch>970)||(adcl<24)||(adcl>38))
+			{
+
+				
+			//	kprints("a/d error      ");
+				//kprinti(adch);
+			//	kprinti(adcl);
+			//	kprinti(counter);
+				counter=0;
+				//set_color(7,0,0);
+				//_delay_ms(2);
+				//set_color(0,0,0);
+				
+			}
+			else
+			{
+				counter++;
+			/*	set_color(0,0,0);
+				if(counter>100)
+					set_color(0,7,7);
+				if(counter>1000)
+					set_color(0,7,0);
+				if(counter>2000)
+					set_color(0,0,7);
+				if(counter>3000)
+					set_color(7,0,7);
+				if(counter>4000)
+					set_color(7,7,7);*/
+
+
+			}
+				a=rx1+1;
+				b=rx2+1;
+				c=rx3+2;
+				kprinti(adch);
+				//kprinti(counter);
+			
+
+		}
+}
+
+void sensor_test_1()
+{
+	int good_message=0;
+	int count_pointer=0;
+	int count_pointer_a=txvalue_buffer_pointer;
+	
+	
+
+	while(count_pointer<4)
+	{
+		if(count_pointer_a==0)
+			count_pointer_a=3;
+		else
+			count_pointer_a--;
+
+		if(txvalue_buffer[5][count_pointer_a]==1)
+		{
+		
+			good_message=1;
+			txvalue_buffer[5][count_pointer_a]=0;//clear that entry
+
+
+		}
+
+		count_pointer++;
+	
+		
+
+	}
+
+	if(good_message==1)
+		set_color(0,1,0);
+	else
+		set_color(1,0,0);
+
+}
