@@ -21,7 +21,7 @@ int main(void) {
 	// Initialize timer2
 	TCCR2A |= (1<<WGM21); // do not change any output pin, clear at compare match with OCR2A
 	TIMSK2 = (1<<OCIE2A); // compare match on OCR2A
-    OCR2A = 50; // compare every 150 counts (every 150us, 1/10 frequency of communication bits)
+    OCR2A = 50; // compare every 50 counts (every 50us, 1/10 frequency of communication bits)
     TCCR2B |= (0<<CS22)|(1<<CS21)|(0<<CS20); // prescaler of 1/8: count every 1us
 
     sei(); // Enable interrupts
