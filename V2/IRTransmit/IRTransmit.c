@@ -69,7 +69,7 @@ ISR(TIMER2_COMPA_vect) {
 				PORTC &= ~(1<<PORTC5); // always clear bit after 2 cycles
 				cycle += 1;
 			} else { 
-				cycle += 1; // Increment edge counter
+				cycle += 1; // increment cycle counter
 			}
 		}	
 	}
