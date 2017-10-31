@@ -17,7 +17,7 @@ static volatile char rcvd2 = 0;
 int main(void) {
 	
 	// enable pin C5 and pin C4 as outputs
-	DDRC = (1<<DDC5) | (1<<DDC4) | (1<<DDC3); // C5: mimic signal, C4: communication bits, C3: message received correctly
+	DDRC = (1<<DDC5) | (1<<DDC4) | (1<<DDC3); // C5: start bit, C4: communication bits, C3: message received correctly
 	
 	// Initialize analog compare pins
     DIDR1 = (1<<AIN1D) | (1<<AIN0D); // Disable the digital input buffers
@@ -42,9 +42,6 @@ ISR(ANALOG_COMP_vect) {
     // On rising edge
     if (ACSR & (1<<ACO))
     {
-        // Turn on C5 and C4 output
-        PORTC = (1<<PORTC5) | (1<<PORTC4); 
-			
 		// Reset edge counter
 		last_edge = 0;       
 
@@ -53,8 +50,11 @@ ISR(ANALOG_COMP_vect) {
 
         // Store received "1"
         if (rcving==0) {
+			//PORTC &= ~(1<<PORTC3); // new message, clear C3
+			PORTC |= (1<<PORTC5); // turn on C5 output for start bit
             rcving = 1; // have received a start bit
         } else { // if rcving=1
+			PORTC |= (1<<PORTC4); // turn on C4 for comm bits
             if (bits_rcvd<8) {
                 rcvd1 &= (1<<(7-bits_rcvd));
                 bits_rcvd += 1;
@@ -66,16 +66,17 @@ ISR(ANALOG_COMP_vect) {
             else { // received all 16 bits
                 bits_rcvd = 0;
                 rcving = 0; // finished receiving
+				PORTC &= ~(1<<PORTC5);
                 if ((rcvd1-rcvd2)==0) { // if two messages are the same
-                    PORTC = (1<<PORTC3); // turn on C3 output
+                    //PORTC = (1<<PORTC3); // turn on C3 output
                 }
             }
         }
     }
-    else // only necessary if the C5 output is still being used to mimic the signal
+    else 
     {
         // Turn off C5 output
-        PORTC &= ~(1<<PORTC5);
+        //PORTC &= ~(1<<PORTC5);
 
         // Change to rising edge.
         ACSR |= (1<<ACIS0);
@@ -84,10 +85,10 @@ ISR(ANALOG_COMP_vect) {
 
 ISR(TIMER2_COMPA_vect) {
 
-    if (rcving=1) { // only bother tracking 0 bits if a start bit has been received
+    if (rcving==1) { // only bother tracking 0 bits if a start bit has been received
         last_edge += 1; // Increment edge counter
 
-        if (last_edge > 10) { // Did not receive a 1 communication bit in over 500us (received a 0 communication bit)
+        if (last_edge>12) { // Did not receive a rising edge in over 600us (received a 0 communication bit)
 
             PORTC &= ~(1<<PORTC4); // Clear C4 output
             
@@ -97,11 +98,11 @@ ISR(TIMER2_COMPA_vect) {
                 bits_rcvd = 0;
                 rcving = 0; // finished receiving
                 if ((rcvd1-rcvd2)==0) { // if two messages are the same
-                    PORTC = (1<<PORTC3); // turn on C3 output
+                    PORTC &= ~(1<<PORTC5); // turn off C5 if messages are equal
                 }
             }
 
-            last_edge = 0; // Reset edge counter
+            last_edge = 2; // Reset edge counter
 
         }
     }

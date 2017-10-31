@@ -3,11 +3,12 @@
 //write fuses: -U lfuse:w:0xE2:m -F
 
 #include <avr/io.h>
+#include <avr/interrupt.h>
 #include <stdlib.h>
 #include <util/delay.h>
 
 static volatile int cycle = 0;
-static char toSend = a;
+static char toSend = 0b10111001; // some sequence of 8 bits here
 static volatile int bits_sent = 0;
 static volatile int next_bit = 0;
 static volatile int sending = 0;
@@ -75,7 +76,7 @@ ISR(TIMER2_COMPA_vect) {
 	}
 	else { // if pausing
 		cycle +=1; 
-		if (cycle==200) { // pause for 10ms after sending message
+		if (cycle==200) { // pause for 200us after sending message
 			cycle=0;
 			pausing=0;
 		}
