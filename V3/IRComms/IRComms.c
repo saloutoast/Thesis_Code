@@ -14,7 +14,8 @@ static volatile char rcvd1 = 0;
 static volatile char rcvd2 = 0;
 
 static volatile int cycle = 0;
-static char toSend = 0b01000110; // some sequence of 8 bits here
+static volatile char toSend = 0b00000001; // some sequence of 8 bits here
+static volatile char nextSend = 0b00000001;
 static volatile int bits_sent = 0;
 static volatile int next_bit = 0;
 static volatile int sending = 0;
@@ -67,11 +68,11 @@ ISR(ANALOG_COMP_vect) {
         } else { // if rcving=1
 			PORTC |= (1<<PORTC4); // turn on C4 for comm bits
             if (bits_rcvd<8) {
-                rcvd1 &= (1<<(7-bits_rcvd));
+                rcvd1 |= (1<<(7-bits_rcvd));
                 bits_rcvd += 1;
             } 
             else if (bits_rcvd<16) {
-                rcvd2 &= (1<<(15-bits_rcvd));
+                rcvd2 |= (1<<(15-bits_rcvd));
                 bits_rcvd += 1;
             }
             else { // received all 16 bits
@@ -79,6 +80,9 @@ ISR(ANALOG_COMP_vect) {
                 rcving = 0; // finished receiving	
                 if ((rcvd1-rcvd2)==0) { // if two messages are the same
                     PORTC &= ~(1<<PORTC5);
+					nextSend = rcvd1; //update next message
+					rcvd1 = 0;
+					rcvd2 = 0;
                 }
             }
         }
@@ -106,6 +110,9 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
                 rcving = 0; // finished receiving
                 if ((rcvd1-rcvd2)==0) { // if two messages are the same
                     PORTC &= ~(1<<PORTC5); // turn off C5 if messages are equal
+					nextSend = rcvd1; // update next message
+					rcvd1 = 0;
+					rcvd2 = 0;
                 }
             }
             last_edge = 2; // Reset edge counter
@@ -144,6 +151,7 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 					sending = 0;
 					pausing = 1;
 					bits_sent = 0;
+					toSend = 0;
 				}
 				cycle = 0;
 
@@ -160,6 +168,8 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 		if (cycle==200) { // pause for 200us after sending message
 			cycle=0;
 			pausing=0;
+			toSend = nextSend+1; // update character to send from queue
+			nextSend = 0;
 		}
 	}
 }
