@@ -25,7 +25,7 @@ static volatile int pausing = 0;
 int main(void) {
 	
 	// enable pin C5 and pin C4 as outputs
-	DDRC = (1<<DDC5) | (1<<DDC4) | (1<<DDC3); // C5: start bit, C4: communication bits, C3: IR LED
+	DDRC = (1<<DDC5) | (1<<DDC4) | (1<<DDC3) | (1<<DDC2); // C5: start bit, C4: communication bits, C3: IR LED
 	
 	// Initialize analog compare pins
     DIDR1 = (1<<AIN1D) | (1<<AIN0D); // Disable the digital input buffers
