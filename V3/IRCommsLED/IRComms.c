@@ -78,14 +78,15 @@ ISR(ANALOG_COMP_vect) {
             }
             else { // received all 16 bits
                 bits_rcvd = 0;
-                rcving = 0; // finished receiving	
-                if ((rcvd1==toSend)&&(rcvd2==toSend)) { // if two messages are the same
-                    PORTC &= ~(1<<PORTC5);
+                rcving = 0; // finished receiving
+				PORTC &= ~(1<<PORTC5);	
+                //if ((rcvd1==toSend)&&(rcvd2==toSend)) { // if two messages are the same
+                if (rcvd1==rcvd2) {
 					PORTC |= (1<<PORTC2); // turn on debugging LED
-					//nextSend = rcvd1; //update next message
-					rcvd1 = 0;
-					rcvd2 = 0;
+					debug_count = 0;
                 }
+				rcvd1 = 0;
+				rcvd2 = 0;
             }
         }
     }
@@ -109,15 +110,15 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
                 bits_rcvd += 1; // increment bit_rcvd counter if currently receiving
             } else { // bits_rcvd = 16, done receiving
                 bits_rcvd = 0;
-                rcving = 0; // finished receiving 
-                if ((rcvd1==toSend)&&(rcvd2==toSend)) { // if two messages are the same
-                    PORTC &= ~(1<<PORTC5);
+                rcving = 0; // finished receiving
+				PORTC &= ~(1<<PORTC5); 
+                //if ((rcvd1==toSend)&&(rcvd2==toSend)) { // if two messages are the same
+                if (rcvd1==rcvd2) {
 					PORTC |= (1<<PORTC2); // turn on debugging LED
 					debug_count = 0; //reset count for debugging LED
-					//nextSend = rcvd1; //update next message
-					rcvd1 = 0;
-					rcvd2 = 0;
                 }
+				rcvd1 = 0;
+				rcvd2 = 0;
             }
             last_edge = 2; // Reset edge counter
         }
