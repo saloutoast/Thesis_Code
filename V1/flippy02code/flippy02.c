@@ -3,7 +3,6 @@
 //write fuses: -U lfuse:w:0xE2:m
 //avrdude -c stk500v2 -P usb -p m328p -e -U flash:w:flippy02.hex
 
-
 #include <avr/eeprom.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
