@@ -7,7 +7,7 @@
 #include <util/delay.h>
 
 
-void setLED(unsigned char red, unsigned char green, unsigned char blue);
+//void setLED(unsigned char red, unsigned char green, unsigned char blue);
 
 
 

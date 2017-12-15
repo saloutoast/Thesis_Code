@@ -1,0 +1,721 @@
+
+IRComms.elf:     file format elf32-avr
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .text         00000346  00000000  00000000  00000054  2**1
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  1 .debug_aranges 00000040  00000000  00000000  0000039a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  2 .debug_pubnames 000000e0  00000000  00000000  000003da  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  3 .debug_info   000004d0  00000000  00000000  000004ba  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  4 .debug_abbrev 000001f8  00000000  00000000  0000098a  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  5 .debug_line   000004de  00000000  00000000  00000b82  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  6 .debug_frame  000000f0  00000000  00000000  00001060  2**2
+                  CONTENTS, READONLY, DEBUGGING
+  7 .debug_str    00000197  00000000  00000000  00001150  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  8 .debug_loc    000002ac  00000000  00000000  000012e7  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_ranges 00000048  00000000  00000000  00001593  2**0
+                  CONTENTS, READONLY, DEBUGGING
+
+Disassembly of section .text:
+
+00000000 <__vectors>:
+   0:	0c 94 34 00 	jmp	0x68	; 0x68 <__ctors_end>
+   4:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+   8:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+   c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  10:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  14:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  18:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  1c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  20:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  24:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  28:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  2c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  30:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  34:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  38:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  3c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  40:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  44:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  48:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  4c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  50:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  54:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  58:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  5c:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  60:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+  64:	0c 94 3e 00 	jmp	0x7c	; 0x7c <__bad_interrupt>
+
+00000068 <__ctors_end>:
+  68:	11 24       	eor	r1, r1
+  6a:	1f be       	out	0x3f, r1	; 63
+  6c:	cf ef       	ldi	r28, 0xFF	; 255
+  6e:	d8 e0       	ldi	r29, 0x08	; 8
+  70:	de bf       	out	0x3e, r29	; 62
+  72:	cd bf       	out	0x3d, r28	; 61
+  74:	0e 94 5b 00 	call	0xb6	; 0xb6 <main>
+  78:	0c 94 a1 01 	jmp	0x342	; 0x342 <_exit>
+
+0000007c <__bad_interrupt>:
+  7c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
+
+00000080 <whoAmI>:
+	i2c_init();
+
+	// set necessary register values
+}
+
+void whoAmI(void) {
+  80:	1f 93       	push	r17
+	
+	i2c_start(LSM9DS1_WRITE);
+  82:	84 ed       	ldi	r24, 0xD4	; 212
+  84:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+	i2c_write(0x0F); // who am I register 
+  88:	8f e0       	ldi	r24, 0x0F	; 15
+  8a:	0e 94 9d 00 	call	0x13a	; 0x13a <i2c_write>
+	i2c_stop();
+  8e:	0e 94 9d 01 	call	0x33a	; 0x33a <i2c_stop>
+
+	i2c_start(LSM9DS1_READ);
+  92:	85 ed       	ldi	r24, 0xD5	; 213
+  94:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+	int who = i2c_read_nack();
+  98:	0e 94 b9 00 	call	0x172	; 0x172 <i2c_read_nack>
+  9c:	18 2f       	mov	r17, r24
+	i2c_stop();
+  9e:	0e 94 9d 01 	call	0x33a	; 0x33a <i2c_stop>
+
+	if (who == 0b01101000) { // who am I register value
+  a2:	18 36       	cpi	r17, 0x68	; 104
+  a4:	11 f4       	brne	.+4      	; 0xaa <whoAmI+0x2a>
+		PORTB |= (1<<PORTB0);
+  a6:	28 9a       	sbi	0x05, 0	; 5
+  a8:	01 c0       	rjmp	.+2      	; 0xac <whoAmI+0x2c>
+	} else {
+		PORTB |= (1<<PORTB2);
+  aa:	2a 9a       	sbi	0x05, 2	; 5
+	}
+}
+  ac:	1f 91       	pop	r17
+  ae:	08 95       	ret
+
+000000b0 <imu_init>:
+}
+
+
+void imu_init(void) {
+	
+	i2c_init();
+  b0:	0e 94 73 00 	call	0xe6	; 0xe6 <i2c_init>
+
+	// set necessary register values
+}
+  b4:	08 95       	ret
+
+000000b6 <main>:
+void whoAmI(void);
+/* int get_ax(void);
+int get_ay(void);
+int get_gz(void); */
+
+int main(void) {
+  b6:	cf 93       	push	r28
+  b8:	df 93       	push	r29
+
+	DDRB=0;
+  ba:	14 b8       	out	0x04, r1	; 4
+	PORTB=0;
+  bc:	15 b8       	out	0x05, r1	; 5
+	DDRB = (1<<DDB0) | (1<<DDB1) | (1<<DDB2); // enable debugging LEDs
+  be:	87 e0       	ldi	r24, 0x07	; 7
+  c0:	84 b9       	out	0x04, r24	; 4
+	DDRB |= (1<<7);
+  c2:	27 9a       	sbi	0x04, 7	; 4
+	DDRB |= (1<<6);
+  c4:	26 9a       	sbi	0x04, 6	; 4
+	PORTB &=~(1<<6);
+  c6:	2e 98       	cbi	0x05, 6	; 5
+	PORTB &=~(1<<7);
+  c8:	2f 98       	cbi	0x05, 7	; 5
+}
+
+
+void imu_init(void) {
+	
+	i2c_init();
+  ca:	0e 94 73 00 	call	0xe6	; 0xe6 <i2c_init>
+    milliseconds can be achieved.
+ */
+void
+_delay_loop_2(uint16_t __count)
+{
+	__asm__ volatile (
+  ce:	c8 ec       	ldi	r28, 0xC8	; 200
+  d0:	d0 e0       	ldi	r29, 0x00	; 0
+		// integrate gyroscope
+
+		// turn on LEDs based on heading position
+
+
+		whoAmI(); // test comms
+  d2:	0e 94 40 00 	call	0x80	; 0x80 <whoAmI>
+  d6:	88 ee       	ldi	r24, 0xE8	; 232
+  d8:	93 e0       	ldi	r25, 0x03	; 3
+  da:	fe 01       	movw	r30, r28
+  dc:	31 97       	sbiw	r30, 0x01	; 1
+  de:	f1 f7       	brne	.-4      	; 0xdc <main+0x26>
+		__ticks = (uint16_t) (__ms * 10.0);
+		while(__ticks)
+		{
+			// wait 1/10 ms
+			_delay_loop_2(((F_CPU) / 4e3) / 10);
+			__ticks --;
+  e0:	01 97       	sbiw	r24, 0x01	; 1
+		__ticks = 1;
+	else if (__tmp > 65535)
+	{
+		//	__ticks = requested delay in 1/10 ms
+		__ticks = (uint16_t) (__ms * 10.0);
+		while(__ticks)
+  e2:	d9 f7       	brne	.-10     	; 0xda <main+0x24>
+  e4:	f6 cf       	rjmp	.-20     	; 0xd2 <main+0x1c>
+
+000000e6 <i2c_init>:
+#define Prescaler 1
+#define TWBR_val ((((F_CPU / F_SCL) / Prescaler) - 16 ) / 2)
+
+void i2c_init(void)
+{
+	TWBR = (uint8_t)TWBR_val;
+  e6:	80 e2       	ldi	r24, 0x20	; 32
+  e8:	80 93 b8 00 	sts	0x00B8, r24
+}
+  ec:	08 95       	ret
+
+000000ee <i2c_start>:
+
+uint8_t i2c_start(uint8_t address)
+{
+  ee:	98 2f       	mov	r25, r24
+	// reset TWI control register
+	TWCR = 0;
+  f0:	10 92 bc 00 	sts	0x00BC, r1
+	// transmit START condition 
+	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
+  f4:	84 ea       	ldi	r24, 0xA4	; 164
+  f6:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+  fa:	80 91 bc 00 	lds	r24, 0x00BC
+  fe:	87 ff       	sbrs	r24, 7
+ 100:	fc cf       	rjmp	.-8      	; 0xfa <i2c_start+0xc>
+	
+	// check if the start condition was successfully transmitted
+	if((TWSR & 0xF8) != TW_START){ return 1; }
+ 102:	80 91 b9 00 	lds	r24, 0x00B9
+ 106:	88 7f       	andi	r24, 0xF8	; 248
+ 108:	88 30       	cpi	r24, 0x08	; 8
+ 10a:	11 f0       	breq	.+4      	; 0x110 <i2c_start+0x22>
+ 10c:	81 e0       	ldi	r24, 0x01	; 1
+ 10e:	08 95       	ret
+	
+	// load slave address into data register
+	TWDR = address;
+ 110:	90 93 bb 00 	sts	0x00BB, r25
+	// start transmission of address
+	TWCR = (1<<TWINT) | (1<<TWEN);
+ 114:	84 e8       	ldi	r24, 0x84	; 132
+ 116:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 11a:	80 91 bc 00 	lds	r24, 0x00BC
+ 11e:	87 ff       	sbrs	r24, 7
+ 120:	fc cf       	rjmp	.-8      	; 0x11a <i2c_start+0x2c>
+	
+	// check if the device has acknowledged the READ / WRITE mode
+	uint8_t twst = TW_STATUS & 0xF8;
+ 122:	90 91 b9 00 	lds	r25, 0x00B9
+ 126:	98 7f       	andi	r25, 0xF8	; 248
+	if ( (twst != TW_MT_SLA_ACK) && (twst != TW_MR_SLA_ACK) ) return 1;
+ 128:	98 31       	cpi	r25, 0x18	; 24
+ 12a:	11 f4       	brne	.+4      	; 0x130 <i2c_start+0x42>
+ 12c:	80 e0       	ldi	r24, 0x00	; 0
+ 12e:	08 95       	ret
+ 130:	80 e0       	ldi	r24, 0x00	; 0
+ 132:	90 34       	cpi	r25, 0x40	; 64
+ 134:	09 f0       	breq	.+2      	; 0x138 <i2c_start+0x4a>
+ 136:	81 e0       	ldi	r24, 0x01	; 1
+	
+	return 0;
+}
+ 138:	08 95       	ret
+
+0000013a <i2c_write>:
+
+uint8_t i2c_write(uint8_t data)
+{
+	// load data into data register
+	TWDR = data;
+ 13a:	80 93 bb 00 	sts	0x00BB, r24
+	// start transmission of data
+	TWCR = (1<<TWINT) | (1<<TWEN);
+ 13e:	84 e8       	ldi	r24, 0x84	; 132
+ 140:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 144:	80 91 bc 00 	lds	r24, 0x00BC
+ 148:	87 ff       	sbrs	r24, 7
+ 14a:	fc cf       	rjmp	.-8      	; 0x144 <i2c_write+0xa>
+	
+	if( (TWSR & 0xF8) != TW_MT_DATA_ACK ){ return 1; }
+ 14c:	80 91 b9 00 	lds	r24, 0x00B9
+ 150:	90 e0       	ldi	r25, 0x00	; 0
+ 152:	88 7f       	andi	r24, 0xF8	; 248
+ 154:	88 32       	cpi	r24, 0x28	; 40
+ 156:	09 f0       	breq	.+2      	; 0x15a <i2c_write+0x20>
+ 158:	91 e0       	ldi	r25, 0x01	; 1
+	
+	return 0;
+}
+ 15a:	89 2f       	mov	r24, r25
+ 15c:	08 95       	ret
+
+0000015e <i2c_read_ack>:
+
+uint8_t i2c_read_ack(void)
+{
+	
+	// start TWI module and acknowledge data after reception
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA); 
+ 15e:	84 ec       	ldi	r24, 0xC4	; 196
+ 160:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 164:	80 91 bc 00 	lds	r24, 0x00BC
+ 168:	87 ff       	sbrs	r24, 7
+ 16a:	fc cf       	rjmp	.-8      	; 0x164 <i2c_read_ack+0x6>
+	// return received data from TWDR
+	return TWDR;
+ 16c:	80 91 bb 00 	lds	r24, 0x00BB
+}
+ 170:	08 95       	ret
+
+00000172 <i2c_read_nack>:
+
+uint8_t i2c_read_nack(void)
+{
+	
+	// start receiving without acknowledging reception
+	TWCR = (1<<TWINT) | (1<<TWEN);
+ 172:	84 e8       	ldi	r24, 0x84	; 132
+ 174:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 178:	80 91 bc 00 	lds	r24, 0x00BC
+ 17c:	87 ff       	sbrs	r24, 7
+ 17e:	fc cf       	rjmp	.-8      	; 0x178 <i2c_read_nack+0x6>
+	// return received data from TWDR
+	return TWDR;
+ 180:	80 91 bb 00 	lds	r24, 0x00BB
+}
+ 184:	08 95       	ret
+
+00000186 <i2c_transmit>:
+
+uint8_t i2c_transmit(uint8_t address, uint8_t* data, uint16_t length)
+{
+ 186:	ef 92       	push	r14
+ 188:	ff 92       	push	r15
+ 18a:	0f 93       	push	r16
+ 18c:	1f 93       	push	r17
+ 18e:	cf 93       	push	r28
+ 190:	df 93       	push	r29
+ 192:	7b 01       	movw	r14, r22
+ 194:	8a 01       	movw	r16, r20
+	if (i2c_start(address | I2C_WRITE)) return 1;
+ 196:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+ 19a:	88 23       	and	r24, r24
+ 19c:	a1 f4       	brne	.+40     	; 0x1c6 <i2c_transmit+0x40>
+ 19e:	c0 e0       	ldi	r28, 0x00	; 0
+ 1a0:	d0 e0       	ldi	r29, 0x00	; 0
+ 1a2:	09 c0       	rjmp	.+18     	; 0x1b6 <i2c_transmit+0x30>
+	
+	for (uint16_t i = 0; i < length; i++)
+	{
+		if (i2c_write(data[i])) return 1;
+ 1a4:	f7 01       	movw	r30, r14
+ 1a6:	ec 0f       	add	r30, r28
+ 1a8:	fd 1f       	adc	r31, r29
+ 1aa:	80 81       	ld	r24, Z
+ 1ac:	0e 94 9d 00 	call	0x13a	; 0x13a <i2c_write>
+ 1b0:	88 23       	and	r24, r24
+ 1b2:	49 f4       	brne	.+18     	; 0x1c6 <i2c_transmit+0x40>
+
+uint8_t i2c_transmit(uint8_t address, uint8_t* data, uint16_t length)
+{
+	if (i2c_start(address | I2C_WRITE)) return 1;
+	
+	for (uint16_t i = 0; i < length; i++)
+ 1b4:	21 96       	adiw	r28, 0x01	; 1
+ 1b6:	c0 17       	cp	r28, r16
+ 1b8:	d1 07       	cpc	r29, r17
+ 1ba:	a0 f3       	brcs	.-24     	; 0x1a4 <i2c_transmit+0x1e>
+}
+
+void i2c_stop(void)
+{
+	// transmit STOP condition
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
+ 1bc:	84 e9       	ldi	r24, 0x94	; 148
+ 1be:	80 93 bc 00 	sts	0x00BC, r24
+ 1c2:	80 e0       	ldi	r24, 0x00	; 0
+ 1c4:	01 c0       	rjmp	.+2      	; 0x1c8 <i2c_transmit+0x42>
+		if (i2c_write(data[i])) return 1;
+	}
+	
+	i2c_stop();
+	
+	return 0;
+ 1c6:	81 e0       	ldi	r24, 0x01	; 1
+}
+ 1c8:	df 91       	pop	r29
+ 1ca:	cf 91       	pop	r28
+ 1cc:	1f 91       	pop	r17
+ 1ce:	0f 91       	pop	r16
+ 1d0:	ff 90       	pop	r15
+ 1d2:	ef 90       	pop	r14
+ 1d4:	08 95       	ret
+
+000001d6 <i2c_receive>:
+
+uint8_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length)
+{
+ 1d6:	0f 93       	push	r16
+ 1d8:	1f 93       	push	r17
+ 1da:	cf 93       	push	r28
+ 1dc:	df 93       	push	r29
+ 1de:	eb 01       	movw	r28, r22
+ 1e0:	8a 01       	movw	r16, r20
+	if (i2c_start(address | I2C_READ)) return 1;
+ 1e2:	81 60       	ori	r24, 0x01	; 1
+ 1e4:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+ 1e8:	88 23       	and	r24, r24
+ 1ea:	11 f0       	breq	.+4      	; 0x1f0 <i2c_receive+0x1a>
+ 1ec:	81 e0       	ldi	r24, 0x01	; 1
+ 1ee:	29 c0       	rjmp	.+82     	; 0x242 <i2c_receive+0x6c>
+ 1f0:	20 e0       	ldi	r18, 0x00	; 0
+ 1f2:	30 e0       	ldi	r19, 0x00	; 0
+	
+	for (uint16_t i = 0; i < (length-1); i++)
+ 1f4:	a8 01       	movw	r20, r16
+ 1f6:	41 50       	subi	r20, 0x01	; 1
+ 1f8:	50 40       	sbci	r21, 0x00	; 0
+
+uint8_t i2c_read_ack(void)
+{
+	
+	// start TWI module and acknowledge data after reception
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA); 
+ 1fa:	94 ec       	ldi	r25, 0xC4	; 196
+ 1fc:	0e c0       	rjmp	.+28     	; 0x21a <i2c_receive+0x44>
+ 1fe:	90 93 bc 00 	sts	0x00BC, r25
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 202:	80 91 bc 00 	lds	r24, 0x00BC
+ 206:	87 ff       	sbrs	r24, 7
+ 208:	fc cf       	rjmp	.-8      	; 0x202 <i2c_receive+0x2c>
+	// return received data from TWDR
+	return TWDR;
+ 20a:	80 91 bb 00 	lds	r24, 0x00BB
+{
+	if (i2c_start(address | I2C_READ)) return 1;
+	
+	for (uint16_t i = 0; i < (length-1); i++)
+	{
+		data[i] = i2c_read_ack();
+ 20e:	fe 01       	movw	r30, r28
+ 210:	e2 0f       	add	r30, r18
+ 212:	f3 1f       	adc	r31, r19
+ 214:	80 83       	st	Z, r24
+
+uint8_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length)
+{
+	if (i2c_start(address | I2C_READ)) return 1;
+	
+	for (uint16_t i = 0; i < (length-1); i++)
+ 216:	2f 5f       	subi	r18, 0xFF	; 255
+ 218:	3f 4f       	sbci	r19, 0xFF	; 255
+ 21a:	24 17       	cp	r18, r20
+ 21c:	35 07       	cpc	r19, r21
+ 21e:	78 f3       	brcs	.-34     	; 0x1fe <i2c_receive+0x28>
+
+uint8_t i2c_read_nack(void)
+{
+	
+	// start receiving without acknowledging reception
+	TWCR = (1<<TWINT) | (1<<TWEN);
+ 220:	84 e8       	ldi	r24, 0x84	; 132
+ 222:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 226:	80 91 bc 00 	lds	r24, 0x00BC
+ 22a:	87 ff       	sbrs	r24, 7
+ 22c:	fc cf       	rjmp	.-8      	; 0x226 <i2c_receive+0x50>
+	// return received data from TWDR
+	return TWDR;
+ 22e:	80 91 bb 00 	lds	r24, 0x00BB
+	
+	for (uint16_t i = 0; i < (length-1); i++)
+	{
+		data[i] = i2c_read_ack();
+	}
+	data[(length-1)] = i2c_read_nack();
+ 232:	c0 0f       	add	r28, r16
+ 234:	d1 1f       	adc	r29, r17
+ 236:	21 97       	sbiw	r28, 0x01	; 1
+ 238:	88 83       	st	Y, r24
+}
+
+void i2c_stop(void)
+{
+	// transmit STOP condition
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
+ 23a:	84 e9       	ldi	r24, 0x94	; 148
+ 23c:	80 93 bc 00 	sts	0x00BC, r24
+ 240:	80 e0       	ldi	r24, 0x00	; 0
+	data[(length-1)] = i2c_read_nack();
+	
+	i2c_stop();
+	
+	return 0;
+}
+ 242:	df 91       	pop	r29
+ 244:	cf 91       	pop	r28
+ 246:	1f 91       	pop	r17
+ 248:	0f 91       	pop	r16
+ 24a:	08 95       	ret
+
+0000024c <i2c_writeReg>:
+
+uint8_t i2c_writeReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length)
+{
+ 24c:	cf 92       	push	r12
+ 24e:	df 92       	push	r13
+ 250:	ef 92       	push	r14
+ 252:	ff 92       	push	r15
+ 254:	1f 93       	push	r17
+ 256:	cf 93       	push	r28
+ 258:	df 93       	push	r29
+ 25a:	16 2f       	mov	r17, r22
+ 25c:	6a 01       	movw	r12, r20
+ 25e:	79 01       	movw	r14, r18
+	if (i2c_start(devaddr | 0x00)) return 1;
+ 260:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+ 264:	88 23       	and	r24, r24
+ 266:	b9 f4       	brne	.+46     	; 0x296 <i2c_writeReg+0x4a>
+
+	i2c_write(regaddr);
+ 268:	81 2f       	mov	r24, r17
+ 26a:	0e 94 9d 00 	call	0x13a	; 0x13a <i2c_write>
+ 26e:	c0 e0       	ldi	r28, 0x00	; 0
+ 270:	d0 e0       	ldi	r29, 0x00	; 0
+ 272:	09 c0       	rjmp	.+18     	; 0x286 <i2c_writeReg+0x3a>
+
+	for (uint16_t i = 0; i < length; i++)
+	{
+		if (i2c_write(data[i])) return 1;
+ 274:	f6 01       	movw	r30, r12
+ 276:	ec 0f       	add	r30, r28
+ 278:	fd 1f       	adc	r31, r29
+ 27a:	80 81       	ld	r24, Z
+ 27c:	0e 94 9d 00 	call	0x13a	; 0x13a <i2c_write>
+ 280:	88 23       	and	r24, r24
+ 282:	49 f4       	brne	.+18     	; 0x296 <i2c_writeReg+0x4a>
+{
+	if (i2c_start(devaddr | 0x00)) return 1;
+
+	i2c_write(regaddr);
+
+	for (uint16_t i = 0; i < length; i++)
+ 284:	21 96       	adiw	r28, 0x01	; 1
+ 286:	ce 15       	cp	r28, r14
+ 288:	df 05       	cpc	r29, r15
+ 28a:	a0 f3       	brcs	.-24     	; 0x274 <i2c_writeReg+0x28>
+}
+
+void i2c_stop(void)
+{
+	// transmit STOP condition
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
+ 28c:	84 e9       	ldi	r24, 0x94	; 148
+ 28e:	80 93 bc 00 	sts	0x00BC, r24
+ 292:	80 e0       	ldi	r24, 0x00	; 0
+ 294:	01 c0       	rjmp	.+2      	; 0x298 <i2c_writeReg+0x4c>
+		if (i2c_write(data[i])) return 1;
+	}
+
+	i2c_stop();
+
+	return 0;
+ 296:	81 e0       	ldi	r24, 0x01	; 1
+}
+ 298:	df 91       	pop	r29
+ 29a:	cf 91       	pop	r28
+ 29c:	1f 91       	pop	r17
+ 29e:	ff 90       	pop	r15
+ 2a0:	ef 90       	pop	r14
+ 2a2:	df 90       	pop	r13
+ 2a4:	cf 90       	pop	r12
+ 2a6:	08 95       	ret
+
+000002a8 <i2c_readReg>:
+
+uint8_t i2c_readReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length)
+{
+ 2a8:	ef 92       	push	r14
+ 2aa:	ff 92       	push	r15
+ 2ac:	0f 93       	push	r16
+ 2ae:	1f 93       	push	r17
+ 2b0:	cf 93       	push	r28
+ 2b2:	df 93       	push	r29
+ 2b4:	18 2f       	mov	r17, r24
+ 2b6:	06 2f       	mov	r16, r22
+ 2b8:	ea 01       	movw	r28, r20
+ 2ba:	79 01       	movw	r14, r18
+	if (i2c_start(devaddr)) return 1;
+ 2bc:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+ 2c0:	88 23       	and	r24, r24
+ 2c2:	99 f5       	brne	.+102    	; 0x32a <i2c_readReg+0x82>
+
+	i2c_write(regaddr);
+ 2c4:	80 2f       	mov	r24, r16
+ 2c6:	0e 94 9d 00 	call	0x13a	; 0x13a <i2c_write>
+
+	if (i2c_start(devaddr | 0x01)) return 1;
+ 2ca:	81 2f       	mov	r24, r17
+ 2cc:	81 60       	ori	r24, 0x01	; 1
+ 2ce:	0e 94 77 00 	call	0xee	; 0xee <i2c_start>
+ 2d2:	88 23       	and	r24, r24
+ 2d4:	51 f5       	brne	.+84     	; 0x32a <i2c_readReg+0x82>
+ 2d6:	20 e0       	ldi	r18, 0x00	; 0
+ 2d8:	30 e0       	ldi	r19, 0x00	; 0
+
+	for (uint16_t i = 0; i < (length-1); i++)
+ 2da:	a7 01       	movw	r20, r14
+ 2dc:	41 50       	subi	r20, 0x01	; 1
+ 2de:	50 40       	sbci	r21, 0x00	; 0
+
+uint8_t i2c_read_ack(void)
+{
+	
+	// start TWI module and acknowledge data after reception
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA); 
+ 2e0:	94 ec       	ldi	r25, 0xC4	; 196
+ 2e2:	0e c0       	rjmp	.+28     	; 0x300 <i2c_readReg+0x58>
+ 2e4:	90 93 bc 00 	sts	0x00BC, r25
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 2e8:	80 91 bc 00 	lds	r24, 0x00BC
+ 2ec:	87 ff       	sbrs	r24, 7
+ 2ee:	fc cf       	rjmp	.-8      	; 0x2e8 <i2c_readReg+0x40>
+	// return received data from TWDR
+	return TWDR;
+ 2f0:	80 91 bb 00 	lds	r24, 0x00BB
+
+	if (i2c_start(devaddr | 0x01)) return 1;
+
+	for (uint16_t i = 0; i < (length-1); i++)
+	{
+		data[i] = i2c_read_ack();
+ 2f4:	fe 01       	movw	r30, r28
+ 2f6:	e2 0f       	add	r30, r18
+ 2f8:	f3 1f       	adc	r31, r19
+ 2fa:	80 83       	st	Z, r24
+
+	i2c_write(regaddr);
+
+	if (i2c_start(devaddr | 0x01)) return 1;
+
+	for (uint16_t i = 0; i < (length-1); i++)
+ 2fc:	2f 5f       	subi	r18, 0xFF	; 255
+ 2fe:	3f 4f       	sbci	r19, 0xFF	; 255
+ 300:	24 17       	cp	r18, r20
+ 302:	35 07       	cpc	r19, r21
+ 304:	78 f3       	brcs	.-34     	; 0x2e4 <i2c_readReg+0x3c>
+
+uint8_t i2c_read_nack(void)
+{
+	
+	// start receiving without acknowledging reception
+	TWCR = (1<<TWINT) | (1<<TWEN);
+ 306:	84 e8       	ldi	r24, 0x84	; 132
+ 308:	80 93 bc 00 	sts	0x00BC, r24
+	// wait for end of transmission
+	while( !(TWCR & (1<<TWINT)) );
+ 30c:	80 91 bc 00 	lds	r24, 0x00BC
+ 310:	87 ff       	sbrs	r24, 7
+ 312:	fc cf       	rjmp	.-8      	; 0x30c <i2c_readReg+0x64>
+	// return received data from TWDR
+	return TWDR;
+ 314:	80 91 bb 00 	lds	r24, 0x00BB
+
+	for (uint16_t i = 0; i < (length-1); i++)
+	{
+		data[i] = i2c_read_ack();
+	}
+	data[(length-1)] = i2c_read_nack();
+ 318:	ce 0d       	add	r28, r14
+ 31a:	df 1d       	adc	r29, r15
+ 31c:	21 97       	sbiw	r28, 0x01	; 1
+ 31e:	88 83       	st	Y, r24
+}
+
+void i2c_stop(void)
+{
+	// transmit STOP condition
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
+ 320:	84 e9       	ldi	r24, 0x94	; 148
+ 322:	80 93 bc 00 	sts	0x00BC, r24
+ 326:	80 e0       	ldi	r24, 0x00	; 0
+ 328:	01 c0       	rjmp	.+2      	; 0x32c <i2c_readReg+0x84>
+	}
+	data[(length-1)] = i2c_read_nack();
+
+	i2c_stop();
+
+	return 0;
+ 32a:	81 e0       	ldi	r24, 0x01	; 1
+}
+ 32c:	df 91       	pop	r29
+ 32e:	cf 91       	pop	r28
+ 330:	1f 91       	pop	r17
+ 332:	0f 91       	pop	r16
+ 334:	ff 90       	pop	r15
+ 336:	ef 90       	pop	r14
+ 338:	08 95       	ret
+
+0000033a <i2c_stop>:
+
+void i2c_stop(void)
+{
+	// transmit STOP condition
+	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
+ 33a:	84 e9       	ldi	r24, 0x94	; 148
+ 33c:	80 93 bc 00 	sts	0x00BC, r24
+}
+ 340:	08 95       	ret
+
+00000342 <_exit>:
+ 342:	f8 94       	cli
+
+00000344 <__stop_program>:
+ 344:	ff cf       	rjmp	.-2      	; 0x344 <__stop_program>
