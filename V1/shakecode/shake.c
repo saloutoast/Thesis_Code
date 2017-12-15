@@ -38,18 +38,18 @@ int main(void)
 		_delay_us(80);//leave on for 80us
 		PORTD &=~(1<<6);//deactivate E.P.M
 		PORTD &=~(1<<7);//deactivate E.P.M
-		setLED(0,0,50);//set led to green
+		setLED(0,0,50);//set led to blue
 		_delay_ms(140);//delay 140 ms
 	*/	
 
 
-		setLED(0,0,50);//set led to green
-		PORTD |= (1<<6);//activate E.P.M direction 2
+		setLED(0,0,50);//set led to blue
+		PORTD |= (1<<7);//activate E.P.M direction 2
 		_delay_us(80);//leave on for 80us
 		PORTD &=~(1<<6);//deactivate E.P.M
 		PORTD &=~(1<<7);//deactivate E.P.M
-		setLED(50,0,50);//set led red
-		_delay_ms(1400);//delay 140ms
+		setLED(0,0,0);//clear led
+		_delay_ms(140);//delay 140ms
 
 	}
 	//end user loop
