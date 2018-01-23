@@ -46,7 +46,7 @@ int main(void) {
     DIDR1 = (1<<AIN1D) | (1<<AIN0D); // Disable the digital input buffers
     ACSR = (1<<ACIE) | (1<<ACIS1) | (1<<ACIS0); // Setup the comparator: enable interrupt, interrupt on rising edge
 
-	/* // Initialize timer1 for transmitting
+	// Initialize timer1 for transmitting
     TCCR1B |= (1<<WGM12); // do not change any output pin, clear at compare match with OCR1A
 	TIMSK1 = (1<<OCIE1A); // compare match on OCR1A
 	OCR1A = 50; // compare every 50 counts (every 50us, 1/10 frequency of communication bits)
@@ -56,7 +56,7 @@ int main(void) {
 	TCCR2A |= (1<<WGM21); // do not change any output pin, clear at compare match with OCR2A
 	TIMSK2 = (1<<OCIE2A); // compare match on OCR2A
     OCR2A = 50; // compare every 50 counts (every 50us, 1/10 frequency of communication bits)
-    TCCR2B |= (0<<CS22)|(1<<CS21)|(0<<CS20); // prescaler of 1/8: count every 1us */
+    TCCR2B |= (0<<CS22)|(1<<CS21)|(0<<CS20); // prescaler of 1/8: count every 1us
 	
 	sei(); // enable interrupts
 
@@ -76,11 +76,11 @@ int main(void) {
 	while(1) {
 		// loop, blinking LED to show power is on
 		
-		PORTC |= (1<<PORTC3);
+		/*PORTC |= (1<<PORTC3);
 		PORTB |= (1<<PORTB2);
 		
-		while(ii<10) {
-			_delay_ms(30);
+		while(ii<13) {
+			_delay_us(50);
 			ii++;
 		}
 		ii=0;
@@ -89,10 +89,10 @@ int main(void) {
 		PORTB &= ~(1<<PORTB2);
 
 		while(ii<10) {
-			_delay_ms(30);
+			_delay_ms(10);
 			ii++;
 		}
-		ii=0;
+		ii=0;*/
 
 		ii++;
 	}
@@ -114,7 +114,7 @@ ISR(ANALOG_COMP_vect) {
 			ACSR &= ~(1<<ACIS0); // change to falling edge
 
 			PORTB |= (1<<PORTB0);
-			PORTB |= (1<<PORTB1);
+			//PORTB &= ~(1<<PORTB1);
 
 		} */
 
@@ -124,12 +124,17 @@ ISR(ANALOG_COMP_vect) {
 
 		PORTB &= ~(1<<PORTB0);
 
-		/* if (starting==1) { // start bit rising edge received
+		/*if (starting==1) { // start bit rising edge received
 			if ((start_cycles>11)&(start_cycles<15)) { // test for end of start bit
-				rcving = 1;
+				//rcving = 1;
+				PORTB &= ~(1<<PORTB0);
+				//PORTB |= (1<<PORTB1);
 				ACSR |= (1<<ACIS0); // change back to rising edge
-				TCNT2 = 0; // reset timer2 counter to be insync with the communications
-				bits_rcvd=0; // track number of bits received
+				//TCNT2 = 0; // reset timer2 counter to be insync with the communications
+				//bits_rcvd=0; // track number of bits received
+
+				start_cycles = 0; // reset starting vals
+				starting = 0;
 			}
 		} */
 
@@ -138,13 +143,13 @@ ISR(ANALOG_COMP_vect) {
 	} // rest of reception handled by the timer2 interrupt routine
 } 
 
-/* // RECEIVING
+// RECEIVING
 ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 
     if (starting==1) {
 		start_cycles+=1; // count length of start bit			
 	}
-	if (rcving==1) { // track pulse timing from start bit onward
+	/* if (rcving==1) { // track pulse timing from start bit onward
 
 		rcv_cycles+=1; // start tracking when to sample ACO
 
@@ -193,13 +198,29 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 			rcvd2 = 0;
 
 		}
-    }
+    } */
 } 
 
 // TRANSMISSION
 ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
+
 	
-	if (pausing==0) { // if not pausing
+	if (cycle==0) {
+		PORTC |= (1<<PORTC3); // turn on start bit
+		PORTB |= (1<<PORTB2);
+		cycle++;
+	}
+	else if (cycle==13) {
+		PORTC &= ~(1<<PORTC3);
+		PORTB &= ~(1<<PORTB2);
+		cycle++;
+	}
+	else if (cycle==10000) {
+		cycle=0;
+	}
+	else {cycle++;}
+	
+	/*if (pausing==0) { // if not pausing
 		if (sending==0) { // send start bit on C3
 			PORTC |= (1<<PORTC3);
 			PORTB |= (1<<PORTB2);
@@ -271,6 +292,6 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 			pausing=0;
 
 		}  
-	}
-} */
+	} */
+}
 
