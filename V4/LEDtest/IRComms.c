@@ -35,9 +35,9 @@ int main(void) {
 	PORTB &=~(1<<6);
 	PORTB &=~(1<<7);
 
-	//PORTB |= (1<<PORTB0);
-	//PORTB |= (1<<PORTB1); // turn on middle LED
-	//PORTB |= (1<<PORTB2);
+	PORTB |= (1<<PORTB0); // green
+	PORTB |= (1<<PORTB1); // turn on middle LED
+	//PORTB |= (1<<PORTB2); // red
 
 	DDRC=0;
 	PORTC=0;
@@ -45,7 +45,7 @@ int main(void) {
 		
 	//PORTC |= (1<<PORTC3); // turn on IR LED	
 
-	/* // Initialize analog compare pins
+	// Initialize analog compare pins
     DIDR1 = (1<<AIN1D) | (1<<AIN0D); // Disable the digital input buffers
     ACSR = (1<<ACIE) | (1<<ACIS1) | (1<<ACIS0); // Setup the comparator: enable interrupt, interrupt on rising edge
 
@@ -61,13 +61,13 @@ int main(void) {
     OCR2A = 50; // compare every 50 counts (every 50us, 1/10 frequency of communication bits)
     TCCR2B |= (0<<CS22)|(1<<CS21)|(0<<CS20); // prescaler of 1/8: count every 1us
 	
-	sei(); // enable interrupts */
+	sei(); // enable interrupts
 	
-	//int ii=0;
+	int ii=0;
 	while(1) {
 		// loop
 		
-		//switch E.P.M. direction 1 
+		/* //switch E.P.M. direction 1 
 		PORTB |= (1<<PORTB1); // set middle LED
 		PORTB |= (1<<7);//activate E.P.M direction 1
 		_delay_us(80);//leave on for 80us
@@ -78,17 +78,17 @@ int main(void) {
 		
 		
 
-		/* PORTB &= ~(1<<PORTB2); // clear outer LED
+		PORTB &= ~(1<<PORTB2); // clear outer LED
 		PORTB |= (1<<6);//activate E.P.M direction 2
 		_delay_us(80);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB |= (1<<PORTB2); // set outer LED
-		_delay_ms(140);//delay 140ms
+		_delay_ms(140);//delay 140ms */
 
 		
-		//PORTB |= (1<<PORTB1);
-		//PORTB |= (1<<PORTB2);
+		PORTB |= (1<<PORTB1);
+		PORTB |= (1<<PORTB2);
 		//PORTC |= (1<<PORTC3);
 		
 		while(ii<10) {
@@ -97,20 +97,20 @@ int main(void) {
 		}
 		ii=0;
 
-		//PORTB &= ~(1<<PORTB1);
+		PORTB &= ~(1<<PORTB1);
 		PORTB &= ~(1<<PORTB2);
-		PORTC &= ~(1<<PORTC3);
+		//PORTC &= ~(1<<PORTC3);
 
 		while(ii<10) {
 			_delay_ms(30);
 			ii++;
 		}
-		ii=0; */
+		ii=0;
 	}
 
 }
 
-/* ISR(ANALOG_COMP_vect) {
+ISR(ANALOG_COMP_vect) {
 
     // On rising edge
     if (ACSR & (1<<ACO))
@@ -258,5 +258,5 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 			//nextSend = 0;
 		}  
 	}
-} */
+}
 
