@@ -18,8 +18,7 @@ static volatile int new_bit = 0;
 static volatile char rcvd1 = 0;
 static volatile char rcvd2 = 0;
 
-static volatile char toSend = 0b00000001; // some sequence of 8 bits here
-static volatile char toRcv = 0b01100110; // desired sequence of 8 bits here
+static volatile char toSend = 0b01010101; // some sequence of 8 bits here
 static volatile int bits_sent = 0;
 static volatile int next_bit = 0;
 static volatile int sending = 0;
@@ -46,16 +45,16 @@ int main(void) {
     DIDR1 = (1<<AIN1D) | (1<<AIN0D); // Disable the digital input buffers
     ACSR = (1<<ACIE) | (1<<ACIS1) | (1<<ACIS0); // Setup the comparator: enable interrupt, interrupt on rising edge
 
-	// Initialize timer1 for transmitting
+	// Initialize timer1 for transmitting (currently at 2000 bits per second, might be too fast 
     TCCR1B |= (1<<WGM12); // do not change any output pin, clear at compare match with OCR1A
 	TIMSK1 = (1<<OCIE1A); // compare match on OCR1A
-	OCR1A = 50; // compare every 50 counts (every 50us, 1/10 frequency of communication bits)
+	OCR1A = 50; // compare every 50 counts (every 50us (20kHz), 10x frequency of communication bits)
 	TCCR1B |= (0<<CS12)|(1<<CS11)|(0<<CS10); // prescaler of 1/8: count every 1us 
     
     // Initialize timer2 for receiving
 	TCCR2A |= (1<<WGM21); // do not change any output pin, clear at compare match with OCR2A
 	TIMSK2 = (1<<OCIE2A); // compare match on OCR2A
-    OCR2A = 50; // compare every 50 counts (every 50us, 1/10 frequency of communication bits)
+    OCR2A = 50; // compare every 50 counts (every 50us (20kHz), 10x frequency of communication bits)
     TCCR2B |= (0<<CS22)|(1<<CS21)|(0<<CS20); // prescaler of 1/8: count every 1us
 	
 	sei(); // enable interrupts
@@ -105,40 +104,42 @@ ISR(ANALOG_COMP_vect) {
     if (ACSR & (1<<ACO))
     {
 		
-		PORTB |= (1<<PORTB0);
+		//PORTB |= (1<<PORTB0);
 
-		/* if ((rcving==0)&(starting==0)) // if start bit not received
+		if ((starting==0)&(rcving==0)) // if start bit not received (AND RCVING==0)
 		{
+			TCNT2 = 0;
 			starting = 1;
 			start_cycles = 0;
 			ACSR &= ~(1<<ACIS0); // change to falling edge
 
 			PORTB |= (1<<PORTB0);
-			//PORTB &= ~(1<<PORTB1);
+			PORTB &= ~(1<<PORTB2);
 
-		} */
+		}
 
-		ACSR &= ~(1<<ACIS0);
+		//ACSR &= ~(1<<ACIS0);
 
     } else { // on falling edge
 
-		PORTB &= ~(1<<PORTB0);
+		//PORTB &= ~(1<<PORTB0);
 
-		/*if (starting==1) { // start bit rising edge received
-			if ((start_cycles>11)&(start_cycles<15)) { // test for end of start bit
-				//rcving = 1;
+		if (starting==1) { // start bit rising edge already received
+			if ((start_cycles>63)&(start_cycles<=75)) { // test for end of start bit
+				rcving = 1;
 				PORTB &= ~(1<<PORTB0);
-				//PORTB |= (1<<PORTB1);
+				
 				ACSR |= (1<<ACIS0); // change back to rising edge
-				//TCNT2 = 0; // reset timer2 counter to be insync with the communications
-				//bits_rcvd=0; // track number of bits received
+				TCNT2 = 0; // reset timer2 counter to be insync with the communications
+				bits_rcvd=0; // track number of bits received
 
-				start_cycles = 0; // reset starting vals
+				start_cycles = 0;
 				starting = 0;
-			}
-		} */
 
-		ACSR |= (1<<ACIS0);
+			}
+		} 
+
+		//ACSR |= (1<<ACIS0);
 
 	} // rest of reception handled by the timer2 interrupt routine
 } 
@@ -147,16 +148,28 @@ ISR(ANALOG_COMP_vect) {
 ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 
     if (starting==1) {
-		start_cycles+=1; // count length of start bit			
+		start_cycles+=1; // count length of start bit
+		
+		if (start_cycles>75) // glitch out, missed falling edge
+		{ 			
+			PORTB |= (1<<PORTB2);			
+			PORTB &= ~(1<<PORTB0);
+			ACSR |= (1<<ACIS0);			
+			start_cycles = 0;
+			starting = 0;
+		}			
+
 	}
-	/* if (rcving==1) { // track pulse timing from start bit onward
+	if (rcving==1) { // track pulse timing from start bit onward
 
 		rcv_cycles+=1; // start tracking when to sample ACO
 
-		if ((bits_rcvd==0)&(rcv_cycles==5)) { // first sample is at half of a cycle
+		if ((bits_rcvd==0)&(rcv_cycles==30)) { // first sample is at half of a cycle, plus the delay at the end of the start signal
 			
 			// get ACO value
 			new_bit = ((ACSR&(1<<ACO))>>5);
+			//if (new_bit==1) { PORTB |= (1<<PORTB2); }
+			
 			
 			// store first bit
 			rcvd1 |= (new_bit<<(7-bits_rcvd));
@@ -165,10 +178,11 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 			rcv_cycles=0; 
 		}
 
-		if (rcv_cycles==10) { // next samples are exaclty out of phase with sent bits
+		if (rcv_cycles==50) { // next samples are exaclty out of phase with sent bits
 
 			// get ACO value
 			new_bit = ((ACSR&(1<<ACO))>>5);
+			//if (new_bit==1) { PORTB |= (1<<PORTB2); }
 			
 			// store bit
 			if (bits_rcvd<8) { rcvd1 |= (new_bit<<(7-bits_rcvd)); }
@@ -185,7 +199,7 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 			if ( rcvd1 == rcvd2 ) {
 				PORTB |= (1<<PORTB1); // messages are the same, light up an LED
 				if (rcvd1 == toSend) { 
-					PORTB |= (1<<PORTB0);
+					PORTB |= (1<<PORTB2);
 				}				
 			}
 
@@ -198,19 +212,19 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 			rcvd2 = 0;
 
 		}
-    } */
+    } 
 } 
 
 // TRANSMISSION
 ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 
 	
-	if (cycle==0) {
+	/* if (cycle==0) {
 		PORTC |= (1<<PORTC3); // turn on start bit
 		PORTB |= (1<<PORTB2);
 		cycle++;
 	}
-	else if (cycle==13) {
+	else if (cycle==65) {
 		PORTC &= ~(1<<PORTC3);
 		PORTB &= ~(1<<PORTB2);
 		cycle++;
@@ -218,34 +232,35 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 	else if (cycle==10000) {
 		cycle=0;
 	}
-	else {cycle++;}
+	else {cycle++;} */
 	
-	/*if (pausing==0) { // if not pausing
+	if (pausing==0) { // if not pausing
 		if (sending==0) { // send start bit on C3
 			PORTC |= (1<<PORTC3);
-			PORTB |= (1<<PORTB2);
+			//PORTB |= (1<<PORTB2);
 			cycle+=1; // start incrementing cycle to determine length of start bit
-			if (cycle==13) {
+			if (cycle==65) {
 				PORTC &= ~(1<<PORTC3); // clear start bits
-				PORTB &= ~(1<<PORTB2);
-
-				cycle = 0;	
+				//PORTB &= ~(1<<PORTB2);
+			}
+			if (cycle==70) { // short low signal for end of start bit
+				cycle = 50;	// to start sending message right away at next ISR call
 				sending = 1; // proceed with sending the rest of the message
 			}
 		}
 		else { // sending = 1
-			if (cycle==10) {
+			if (cycle==50) {
 
 				if (bits_sent<8) { // first message
 					next_bit = (toSend & (1<<(7-bits_sent))) >> (7-bits_sent);
 
 					if (next_bit==1) { 
 						PORTC |= (1<<PORTC3); 
-						PORTB |= (1<<PORTB2);
+						//PORTB |= (1<<PORTB2);
 					} // if bit is 1, set C3
 					else { 
 						PORTC &= ~(1<<PORTC3); 
-						PORTB &= ~(1<<PORTB2);
+						//PORTB &= ~(1<<PORTB2);
 					} // if bit is 0, clear C3
 
 					bits_sent += 1;
@@ -255,11 +270,11 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 
 					if (next_bit==1) { 
 						PORTC |= (1<<PORTC3); 
-						PORTB |= (1<<PORTB2);
+						//PORTB |= (1<<PORTB2);
 					} // if bit is 1, set C3
 					else { 
 						PORTC &= ~(1<<PORTC3); 
-						PORTB &= ~(1<<PORTB2);	
+						//PORTB &= ~(1<<PORTB2);	
 					} // if bit is 0, clear C3
 
 					bits_sent += 1;
@@ -268,30 +283,25 @@ ISR(TIMER1_COMPA_vect) { // timer1 interrupt routine
 					sending = 0;
 					pausing = 1;
 					bits_sent = 0;
-					cycle = 0;
 					//toSend = 0;
 				}
 				cycle = 0;
 
-			} else if (cycle==2) {
-				PORTC &= ~(1<<PORTC3); // always clear bit after 2 cycles
-				PORTB &= ~(1<<PORTB2);
-				cycle += 1;
-			} else { 
-				cycle += 1; // increment cycle counter
-			}
+			} 
+			cycle += 1; // increment cycle counter
+
 		}	
 	}
 	else { // if pausing
 	
 		cycle +=1; 
-		PORTB &= ~(1<<PORTB2);
+		//PORTB &= ~(1<<PORTB2);
 
-		if (cycle==200) { // pause for 200*50 us after sending message
+		if (cycle==10000) { // pause for 0.5s after sending message
 			cycle=0;
 			pausing=0;
 
 		}  
-	} */
+	}
 }
 
