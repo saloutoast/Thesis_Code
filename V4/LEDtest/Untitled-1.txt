@@ -1,0 +1,37 @@
+enum states {
+    SENDING,
+    RCVING,
+    IDLE
+};
+
+// set up timer for state machine
+setup()
+
+while(1) {
+
+    switch(state) {
+    case IDLE
+        wait time
+        state = SENDING
+    
+    case SENDING
+        send a message, one bit at a time
+
+    case RCVING
+        disable interrupts
+        receive message
+        confirm message
+
+    }
+    
+
+
+
+
+
+
+
+}
+
+// analog compare interrupt routine
+state = RCVING
