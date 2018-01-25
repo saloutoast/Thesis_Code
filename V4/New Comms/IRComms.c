@@ -191,7 +191,7 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 		if ((bits_rcvd==0)&(rcv_cycles==50)) { // first sample is at half of a cycle, plus the delay at the end of the start signal
 			
 			// get ACO value
-			new_bit = ((ACSR&(1<<ACO))>>5);
+			new_bit = ((ACSR&(1<<ACO)));
 			//if (new_bit==1) { PORTB |= (1<<PORTB2); }
 			
 			

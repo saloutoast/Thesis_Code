@@ -23,13 +23,6 @@ while(1) {
         confirm message
 
     }
-    
-
-
-
-
-
-
 
 }
 
