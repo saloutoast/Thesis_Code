@@ -15,15 +15,16 @@ enum states {
 };
 
 static volatile int rcv_time = 0; // variables for reception ISR
-static volatile char rcvd1 = 0;
+static volatile char rcvd = 0;
 static volatile char rcvd2 = 0;
 static volatile int bits_rcvd = 0;
 
 static volatile int rcv_sx = 0; // store most recent message
 static volatile char lastRcv = 0;
 
-static volatile char toSend = 0xAA; // message variables
-static volatile char toRcv = 0xAA;
+static volatile char toSend = 0xDB; // message variables
+static volatile char toRcv1 = 0xDB;
+static volatile char toRcv2 = 0xA5;
 
 enum states state = SENDING; //IDLE;
 
@@ -75,9 +76,13 @@ int main(void) {
 				
 				while(1) {
 					cli(); // disable interrupts temporarily to ensure a complete message is sent
-					send_msg(toSend); 
+					send_msg(0xA5); 
 					sei(); 
-					_delay_ms(5);
+					_delay_ms(200);
+					cli();
+					send_msg(0xDB);
+					sei();
+					_delay_ms(200);
 				}
 				
 				/* while(1) {
@@ -99,28 +104,20 @@ int main(void) {
 				break;
 
 			case IDLE:
-				//ii++; // wait to receive messages
+				while(1) {
+					ii++; // wait to receive messages
+				}
 
 				//_delay_ms(100);
 				//state = SENDING;
-				/*if (ii>=20000) { // send a message once in a while (10000 loops -> ~16ms)
-					//state = SENDING;
-					ii=0;
-				} */
 
-				while(1) {
-
+				/*while(1) {
 					if (ACSR & (1<<ACO)) {
-
 						PORTB |= (1<<PORTB2); 
-
 					} else {
-
 						PORTB &= ~(1<<PORTB2);
-
 					}
-
-				}
+				}*/
 
 				break;
 
@@ -136,66 +133,40 @@ int main(void) {
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
-	//PORTB |= (1<<PORTB2);
-	//_delay_us(100);
-	/* while ( (ACSR & (1<<ACO) ) {
-		rcv_sx = 0;
-	} */
+	//PORTB &= ~(1<<PORTB2); // ensure success LED is off
+	PORTB &= ~(1<<PORTB1);
 
-	//PORTB &= ~(1<<PORTB2);
-	
-	/* TCNT0 = 0; // reset counter
-	PORTB |= (1<<PORTB0); // turn on LED to indicate potential start bit
-	PORTB &= ~(1<<PORTB1); // ensure success LED is off
-	rcv_sx = 0; // reset receive success flag
+	_delay_us(90);
+	while(bits_rcvd<8) {
 
-	PORTB |= (1<<PORTB2);
-	while ( TCNT0 < 200) { // while potential "start" bit should be ongoing
+		//PORTB ^= (1<<PORTB2); // toggle LED for each received bit
 		
-		if ((ACSR&(1<<ACO))==0) { // record time after falling edge
-			rcv_time = TCNT0;
-			break;
+		if (ACSR & (1<<ACO)) { // either set or clear received bit
+			rcvd |= (1<<(7-bits_rcvd));
+		} else {
+			rcvd &= ~(1<<(7-bits_rcvd));
+		}
+		bits_rcvd+=1;
+		if (bits_rcvd==8) { 
+			_delay_us(90); 
+		} else { _delay_us(190); }
+	}
+
+	bits_rcvd = 0;
+	PORTB |= (1<<PORTB2);
+
+	rcv_sx = (rcvd | 0b01111110);
+	if (rcv_sx==0xFF) { // test that first and last bits are 1
+		if (rcvd==toRcv1) {
+			PORTB |= (1<<PORTB1);
+		} else if (rcvd==toRcv2) {
+			PORTB |= (1<<PORTB0);
 		}
 	}
-	PORTB &= ~(1<<PORTB2);
+	rcv_sx = 0;
 
-	if ((rcv_time>120)&(rcv_time<140)) { // check that it was a legitimate start bit
-
-		PORTB &= ~(1<<PORTB0); // clear start bit LED
-
-		while (bits_rcvd<8) { // receive first message
-			if (bits_rcvd==0) { _delay_us(40); }// wait until middle of next bit
-			else { _delay_us(45); }
-			PORTB ^= (1<<PORTB2); // toggle LED for each received bit
-			rcvd1 |= ( ((ACSR&(1<<ACO))>>5) << (7-bits_rcvd) ); // set new bit
-			bits_rcvd+=1;
-		}
-
-		while (bits_rcvd<16) { // receive second message
-			_delay_us(45); // wait until middle of next bit
-			PORTB ^= (1<<PORTB2); // toggle LED for each received bit
-			rcvd2 |= ( ((ACSR&(1<<ACO))>>5) << (16-bits_rcvd) ); // set new bit
-			bits_rcvd+=1;
-		}
-
-		PORTB |= (1<<PORTB1); // turn on success LED for transmission
-
-		if (rcvd1==rcvd2) {// check if messages are the same; set success flag here
-			if (rcvd1==toRcv) { // check if message is the same as expected
-				rcv_sx = 1;
-				lastRcv &= 0; // reset lastRcv variable
-				lastRcv |= rcvd1; // store most recent sucessful message
-				PORTB |= (1<<PORTB0); // second LED for correct message
-			}
-		}
-	} else { // if start bit was not legitimate, clear LED and exit ISR
-		PORTB &= ~(1<<PORTB0);
-	}
-	
-
-	rcvd1 = 0; // reset variables for next ISR call
-	rcvd2 = 0;
-	bits_rcvd = 0; */
+	_delay_ms(10);
+	PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) );
 
 } 
 
