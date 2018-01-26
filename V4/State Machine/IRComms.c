@@ -26,7 +26,7 @@ static volatile char toSend = 0xDB; // message variables
 static volatile char toRcv1 = 0xDB;
 static volatile char toRcv2 = 0xA5;
 
-enum states state = SENDING; //IDLE;
+enum states state = SENDING;
 
 int main(void) {
 
@@ -67,58 +67,41 @@ int main(void) {
 
 	sei(); // enable interrupts	
 
-	int ii=0;
+	
 	while(1) {
 		switch(state) {
-			case SENDING:
+			case SENDING: ;
 
-				//PORTB |= ( (1<<PORTB0) | (1<<PORTB1) ); // debugging LEDs
-				
-				while(1) {
-					cli(); // disable interrupts temporarily to ensure a complete message is sent
-					send_msg(0xA5); 
-					sei(); 
-					_delay_ms(200);
+				int jj=0;
+				while(jj<50) { // SENDING for 5 seconds
+					//cli(); // disable interrupts temporarily to ensure a complete message is sent
+					//send_msg(0xA5); 
+					//sei(); 
+					//_delay_ms(98);
 					cli();
 					send_msg(0xDB);
 					sei();
-					_delay_ms(200);
+					_delay_ms(98);
+					jj++;
 				}
-				
-				/* while(1) {
-					PORTC |= (1<<PORTC3);
-					PORTB |= (1<<PORTB2);
-					_delay_us(100);
-					PORTC &= ~(1<<PORTC3);
-					PORTB &= ~(1<<PORTB2);
-					_delay_us(300);
-				} */
 
-
-				//state = IDLE; // return to IDLE state
-
-				//_delay_ms(100);
-
-				//PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) );
-
+				state = IDLE;
 				break;
 
-			case IDLE:
+			case IDLE: ;
+
+				int ii=0;
 				while(1) {
-					ii++; // wait to receive messages
+					if(TCNT0>=200) {
+						ii++;
+						TCNT0=0;
+					}
+					if(ii>=25000) { // IDLE for 5 seconds
+						break;
+					}
 				}
 
-				//_delay_ms(100);
-				//state = SENDING;
-
-				/*while(1) {
-					if (ACSR & (1<<ACO)) {
-						PORTB |= (1<<PORTB2); 
-					} else {
-						PORTB &= ~(1<<PORTB2);
-					}
-				}*/
-
+				state = SENDING;
 				break;
 
 			default: // do nothing
