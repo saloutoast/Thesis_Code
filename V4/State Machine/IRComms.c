@@ -25,7 +25,7 @@ static volatile char lastRcv = 0;
 static volatile char toSend = 0xAA; // message variables
 static volatile char toRcv = 0xAA;
 
-enum states state = IDLE;
+enum states state = SENDING; //IDLE;
 
 int main(void) {
 
@@ -50,8 +50,6 @@ int main(void) {
 
 	// Initialize timer0 for timing (1/8 prescaler, 8-bit timer rolls over at ~120 Hz)
 	TCCR0B |= (0<<CS02)|(1<<CS01)|(0<<CS00);
-    
-	sei(); // enable interrupts
 
 	// test power by turning on LEDs
 	PORTB |= (1<<PORTB0); // green
@@ -64,7 +62,9 @@ int main(void) {
 	PORTB &= ~(1<<PORTB0); // turn off LEDs
 	PORTB &= ~(1<<PORTB1);
 	PORTB &= ~(1<<PORTB2);
-	PORTC &= ~(1<<PORTC3);	
+	PORTC &= ~(1<<PORTC3);
+
+	sei(); // enable interrupts	
 
 	int ii=0;
 	while(1) {
@@ -73,11 +73,24 @@ int main(void) {
 
 				//PORTB |= ( (1<<PORTB0) | (1<<PORTB1) ); // debugging LEDs
 				
-				cli(); // disable interrupts temporarily to ensure a complete message is sent
-				send_msg(toSend); 
-				sei(); 
+				while(1) {
+					cli(); // disable interrupts temporarily to ensure a complete message is sent
+					send_msg(toSend); 
+					sei(); 
+					_delay_ms(5);
+				}
+				
+				/* while(1) {
+					PORTC |= (1<<PORTC3);
+					PORTB |= (1<<PORTB2);
+					_delay_us(100);
+					PORTC &= ~(1<<PORTC3);
+					PORTB &= ~(1<<PORTB2);
+					_delay_us(300);
+				} */
 
-				state = IDLE; // return to IDLE state
+
+				//state = IDLE; // return to IDLE state
 
 				//_delay_ms(100);
 
@@ -86,14 +99,28 @@ int main(void) {
 				break;
 
 			case IDLE:
-				ii++; // wait to receive messages
+				//ii++; // wait to receive messages
 
 				//_delay_ms(100);
 				//state = SENDING;
-				if (ii>=20000) { // send a message once in a while (10000 loops -> ~16ms)
-					state = SENDING;
+				/*if (ii>=20000) { // send a message once in a while (10000 loops -> ~16ms)
+					//state = SENDING;
 					ii=0;
-				} 
+				} */
+
+				while(1) {
+
+					if (ACSR & (1<<ACO)) {
+
+						PORTB |= (1<<PORTB2); 
+
+					} else {
+
+						PORTB &= ~(1<<PORTB2);
+
+					}
+
+				}
 
 				break;
 
@@ -109,37 +136,51 @@ int main(void) {
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
-	TCNT0 = 0; // reset counter
+	//PORTB |= (1<<PORTB2);
+	//_delay_us(100);
+	/* while ( (ACSR & (1<<ACO) ) {
+		rcv_sx = 0;
+	} */
+
+	//PORTB &= ~(1<<PORTB2);
+	
+	/* TCNT0 = 0; // reset counter
 	PORTB |= (1<<PORTB0); // turn on LED to indicate potential start bit
 	PORTB &= ~(1<<PORTB1); // ensure success LED is off
 	rcv_sx = 0; // reset receive success flag
 
-	while ( TCNT0 < 100) { // while potential "start" bit should be ongoing
+	PORTB |= (1<<PORTB2);
+	while ( TCNT0 < 200) { // while potential "start" bit should be ongoing
+		
 		if ((ACSR&(1<<ACO))==0) { // record time after falling edge
 			rcv_time = TCNT0;
 			break;
 		}
 	}
+	PORTB &= ~(1<<PORTB2);
 
-	if ((rcv_time>70)&(rcv_time<80)) { // check that it was a legitimate start bit
+	if ((rcv_time>120)&(rcv_time<140)) { // check that it was a legitimate start bit
 
-		PORTB &= ~(1<<PORTB2); // clear start bit LED
+		PORTB &= ~(1<<PORTB0); // clear start bit LED
 
 		while (bits_rcvd<8) { // receive first message
-			_delay_us(50); // wait until middle of next bit
+			if (bits_rcvd==0) { _delay_us(40); }// wait until middle of next bit
+			else { _delay_us(45); }
+			PORTB ^= (1<<PORTB2); // toggle LED for each received bit
 			rcvd1 |= ( ((ACSR&(1<<ACO))>>5) << (7-bits_rcvd) ); // set new bit
 			bits_rcvd+=1;
 		}
 
 		while (bits_rcvd<16) { // receive second message
-			_delay_us(50); // wait until middle of next bit
+			_delay_us(45); // wait until middle of next bit
+			PORTB ^= (1<<PORTB2); // toggle LED for each received bit
 			rcvd2 |= ( ((ACSR&(1<<ACO))>>5) << (16-bits_rcvd) ); // set new bit
 			bits_rcvd+=1;
 		}
 
+		PORTB |= (1<<PORTB1); // turn on success LED for transmission
+
 		if (rcvd1==rcvd2) {// check if messages are the same; set success flag here
-			
-			PORTB |= (1<<PORTB1); // turn on success LED for transmission
 			if (rcvd1==toRcv) { // check if message is the same as expected
 				rcv_sx = 1;
 				lastRcv &= 0; // reset lastRcv variable
@@ -147,12 +188,14 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				PORTB |= (1<<PORTB0); // second LED for correct message
 			}
 		}
+	} else { // if start bit was not legitimate, clear LED and exit ISR
+		PORTB &= ~(1<<PORTB0);
 	}
-	// if start bit was not legitimate, exit ISR
+	
 
 	rcvd1 = 0; // reset variables for next ISR call
 	rcvd2 = 0;
-	bits_rcvd = 0;
+	bits_rcvd = 0; */
 
 } 
 
@@ -161,50 +204,51 @@ void send_msg(char msg) { // timing values/delays are calibrated with other
 	int start_bit=0;
 	int new_bit=0;
 
-	TCNT0 = 0; // reset counter value
+	//TCNT0 = 0; // reset counter value
 
-	PORTC |= (1<<PORTC3); // start bit
-	PORTB |= (1<<PORTB2);
+	//PORTC |= (1<<PORTC3); // start bit
+	//PORTB |= (1<<PORTB2);
 
-	while (start_bit==0) {
+	/*while (start_bit==0) {
 		if (TCNT0>190) { // end of start bit, start sending message
 			start_bit=1;
 			TCNT1=0;
 			break;
-		} else if (TCNT0>125) { // clear start bit after ~1.5 bit cycles
+		} else if (TCNT0>125) { // clear start bit after ~2.5 bit cycles
 			PORTC &= ~(1<<PORTC3);
 			PORTB &= ~(1<<PORTB2);
 		}
-	}
+	} */
 
 	while(bits_sent<8) { // send first 8-bit messages
 		new_bit = (msg & (1<<(7-bits_sent))) >> (7-bits_sent);
 		if(new_bit==1) { // turn on LEDs
 			PORTC |= (1<<PORTC3);
 			PORTB |= (1<<PORTB2);
+			_delay_us(100);
 		} else { // turn off LEDs
-			PORTC &= ~(1<<PORTC3);
-			PORTB &= ~(1<<PORTB2);
+			_delay_us(100);
 		}
+		PORTC &= ~(1<<PORTC3);
+		PORTB &= ~(1<<PORTB2);
 		bits_sent+=1;
-		_delay_us(42); // wait one bit
+		_delay_us(92); // wait one bit
 	}
 
-	while(bits_sent<16) { // send first 8-bit messages
+	/*while(bits_sent<16) { // send first 8-bit messages
 		new_bit = (msg & (1<<(15-bits_sent))) >> (15-bits_sent);
 		if(new_bit==1) { // turn on LEDs
 			PORTC |= (1<<PORTC3);
 			PORTB |= (1<<PORTB2);
+			_delay_us(100);
 		} else { // turn off LEDs
-			PORTC &= ~(1<<PORTC3);
-			PORTB &= ~(1<<PORTB2);
+			_delay_us(100);
 		}
+		PORTC &= ~(1<<PORTC3);
+		PORTB &= ~(1<<PORTB2);
 		bits_sent+=1;
-		_delay_us(42); // wait one bit
-	}
-
-	PORTC &= ~(1<<PORTC3); // ensure LEDs are turned off after last bit of the message
-	PORTB &= ~(1<<PORTB2);
+		_delay_us(95); // wait one bit
+	}*/
 	
 }
 
