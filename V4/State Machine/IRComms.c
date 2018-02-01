@@ -22,11 +22,11 @@ static volatile int bits_rcvd = 0;
 static volatile int rcv_sx = 0; // store most recent message
 static volatile char lastRcv = 0;
 
-static volatile char toSend = 0xDB; // message variables
+static volatile char toSend = 0xFF; // message variables
 static volatile char toRcv1 = 0xDB;
 static volatile char toRcv2 = 0xA5;
 
-enum states state = SENDING;
+enum states state = IDLE;
 
 int main(void) {
 
@@ -79,13 +79,13 @@ int main(void) {
 					//sei(); 
 					//_delay_ms(98);
 					cli();
-					send_msg(0xDB);
+					send_msg(0xFF);
 					sei();
 					_delay_ms(98);
 					jj++;
 				}
 
-				state = IDLE;
+				//state = IDLE;
 				break;
 
 			case IDLE: ;
@@ -101,7 +101,7 @@ int main(void) {
 					}
 				}
 
-				state = SENDING;
+				//state = SENDING;
 				break;
 
 			default: // do nothing
@@ -116,7 +116,16 @@ int main(void) {
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
-	//PORTB &= ~(1<<PORTB2); // ensure success LED is off
+	// follow pulse train
+	while(ACSR & (1<<ACO)) {
+		PORTB |= (1<<PORTB2);
+	}
+	PORTB &= ~(1<<PORTB2);
+	
+	
+	
+	
+	/* //PORTB &= ~(1<<PORTB2); // ensure success LED is off
 	PORTB &= ~(1<<PORTB1);
 
 	_delay_us(90);
@@ -126,8 +135,10 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 		
 		if (ACSR & (1<<ACO)) { // either set or clear received bit
 			rcvd |= (1<<(7-bits_rcvd));
+			PORTB |= (1<<PORTB2);
 		} else {
 			rcvd &= ~(1<<(7-bits_rcvd));
+			PORTB &= ~(1<<PORTB2);
 		}
 		bits_rcvd+=1;
 		if (bits_rcvd==8) { 
@@ -136,7 +147,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 	}
 
 	bits_rcvd = 0;
-	PORTB |= (1<<PORTB2);
+	//PORTB |= (1<<PORTB2);
 
 	rcv_sx = (rcvd | 0b01111110);
 	if (rcv_sx==0xFF) { // test that first and last bits are 1
@@ -149,7 +160,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 	rcv_sx = 0;
 
 	_delay_ms(10);
-	PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) );
+	PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) ); */
 
 } 
 
