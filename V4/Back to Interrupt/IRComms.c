@@ -49,8 +49,15 @@ int main(void) {
     DIDR1 = (1<<AIN1D) | (1<<AIN0D); // Disable the digital input buffers
     ACSR = (1<<ACIE) | (1<<ACIS1) | (1<<ACIS0); // Setup the comparator: enable interrupt, interrupt on rising edge
 
-	// Initialize timer0 for timing (1/8 prescaler, 8-bit timer rolls over at ~120 Hz)
-	TCCR0B |= (0<<CS02)|(1<<CS01)|(0<<CS00);
+	// Initialize timer0 for timing sending of messages (1/8 prescaler, 8-bit timer rolls over at ~120 Hz)
+	TCCR0B |= (0<<CS02)|(1<<CS01)|(0<<CS00); // TODO: set to CTC mode?
+
+	// Initialize timer2 for timing receiving of messages (___ prescaler, 8-bit timer rolls over at ____ Hz )
+	// TODO: set up timer here for CTC
+	/* TCCR2A |= (1<<WGM21); // do not change any output pin, clear at compare match with OCR2A
+	TIMSK2 = (1<<OCIE2A); // compare match on OCR2A
+    OCR2A = 50; // compare every 50 counts (every 50us (20kHz), 10x frequency of communication bits)
+    TCCR2B |= (0<<CS22)|(1<<CS21)|(0<<CS20); // prescaler of 1/8: count every 1us */
 
 	// test power by turning on LEDs
 	PORTB |= (1<<PORTB0); // green
@@ -69,45 +76,8 @@ int main(void) {
 
 	
 	while(1) {
-		switch(state) {
-			case SENDING: ;
-
-				int jj=0;
-				while(jj<50) { // SENDING for 5 seconds
-					//cli(); // disable interrupts temporarily to ensure a complete message is sent
-					//send_msg(0xA5); 
-					//sei(); 
-					//_delay_ms(98);
-					cli();
-					send_msg(0xAA);
-					sei();
-					_delay_ms(98);
-					jj++;
-				}
-
-				//state = IDLE;
-				break;
-
-			case IDLE: ;
-
-				int ii=0;
-				while(1) {
-					if(TCNT0>=200) {
-						ii++;
-						TCNT0=0;
-					}
-					if(ii>=25000) { // IDLE for 5 seconds
-						break;
-					}
-				}
-
-				//state = SENDING;
-				break;
-
-			default: // do nothing
-				break;
-
-
+		
+		// TODO: main loop -> validate messages, act on messages
 
 		}
 	}
@@ -116,54 +86,32 @@ int main(void) {
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
-	// follow pulse train
+	if (rcving==0) {
+		TCNT2=0;
+		rcving=1;
+		rcvd=0x80;
+		ACSR &= ~(1<<ACIS0); // change to falling edge
+	}
+
+	// TODO: time first pulse and record distance, switch back to rising edge
+
+	// TODO: match rising edges to closest expected time in rcvd
+
+	// TODO: if bit 8 is received, set "new message" flag and record message
+
+
+	/* // simple code to follow pulse train
 	while(ACSR & (1<<ACO)) {
 		PORTB |= (1<<PORTB2);
 	}
-	PORTB &= ~(1<<PORTB2);
-	
-	
-	
-	
-	/* //PORTB &= ~(1<<PORTB2); // ensure success LED is off
-	PORTB &= ~(1<<PORTB1);
-
-	_delay_us(90);
-	while(bits_rcvd<8) {
-
-		//PORTB ^= (1<<PORTB2); // toggle LED for each received bit
-		
-		if (ACSR & (1<<ACO)) { // either set or clear received bit
-			rcvd |= (1<<(7-bits_rcvd));
-			PORTB |= (1<<PORTB2);
-		} else {
-			rcvd &= ~(1<<(7-bits_rcvd));
-			PORTB &= ~(1<<PORTB2);
-		}
-		bits_rcvd+=1;
-		if (bits_rcvd==8) { 
-			_delay_us(90); 
-		} else { _delay_us(190); }
-	}
-
-	bits_rcvd = 0;
-	//PORTB |= (1<<PORTB2);
-
-	rcv_sx = (rcvd | 0b01111110);
-	if (rcv_sx==0xFF) { // test that first and last bits are 1
-		if (rcvd==toRcv1) {
-			PORTB |= (1<<PORTB1);
-		} else if (rcvd==toRcv2) {
-			PORTB |= (1<<PORTB0);
-		}
-	}
-	rcv_sx = 0;
-
-	_delay_ms(10);
-	PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) ); */
+	PORTB &= ~(1<<PORTB2); */
 
 } 
 
+// TODO: ISR for timer 2, clear receiving variables on rollover
+
+
+// TODO: ISR for timer 0 to send messages
 void send_msg(char msg) { // timing values/delays are calibrated with other 
 	int bits_sent=0;
 	int start_bit=0;
@@ -198,22 +146,6 @@ void send_msg(char msg) { // timing values/delays are calibrated with other
 		PORTB &= ~(1<<PORTB2);
 		bits_sent+=1;
 		_delay_us(92); // wait one bit
-	}
-
-	/*while(bits_sent<16) { // send first 8-bit messages
-		new_bit = (msg & (1<<(15-bits_sent))) >> (15-bits_sent);
-		if(new_bit==1) { // turn on LEDs
-			PORTC |= (1<<PORTC3);
-			PORTB |= (1<<PORTB2);
-			_delay_us(100);
-		} else { // turn off LEDs
-			_delay_us(100);
-		}
-		PORTC &= ~(1<<PORTC3);
-		PORTB &= ~(1<<PORTB2);
-		bits_sent+=1;
-		_delay_us(95); // wait one bit
-	}*/
-	
+	}	
 }
 
