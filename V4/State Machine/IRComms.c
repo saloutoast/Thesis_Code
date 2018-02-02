@@ -79,7 +79,7 @@ int main(void) {
 					//sei(); 
 					//_delay_ms(98);
 					cli();
-					send_msg(0xFF);
+					send_msg(0xAA);
 					sei();
 					_delay_ms(98);
 					jj++;

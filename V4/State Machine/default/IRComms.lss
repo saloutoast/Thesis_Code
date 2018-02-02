@@ -347,8 +347,8 @@ _delay_loop_2(uint16_t __count)
 					//_delay_ms(98);
 					cli();
  170:	f8 94       	cli
-					send_msg(0xFF);
- 172:	8f ef       	ldi	r24, 0xFF	; 255
+					send_msg(0xAA);
+ 172:	8a ea       	ldi	r24, 0xAA	; 170
  174:	0e 94 58 00 	call	0xb0	; 0xb0 <send_msg>
 					sei();
  178:	78 94       	sei
