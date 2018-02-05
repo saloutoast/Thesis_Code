@@ -164,7 +164,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
 				if (msg_rcvd==1) {
 					time2 |= TCNT1;
-					if ((time2-time1)>1000) { // try to ensure that the period will measure one rotation
+					if ((time2-time1)>2000) { // try to ensure that the period will measure one rotation
 						period = time2-time1;
 						msg_rcvd = 2;
 					}

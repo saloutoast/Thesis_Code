@@ -286,11 +286,11 @@ _delay_loop_2(uint16_t __count)
 				cur_time = TCNT1;
  18a:	40 91 84 00 	lds	r20, 0x0084
  18e:	50 91 85 00 	lds	r21, 0x0085
-				if ( ((cur_time < (near+20))&(cur_time > (near-20))) | ((cur_time < (far+20))&(cur_time > (far-20))) ) {
+				if ( ((cur_time < (near+10))&(cur_time > (near-10))) | ((cur_time < (far+10))&(cur_time > (far-10))) ) {
  192:	e0 e0       	ldi	r30, 0x00	; 0
  194:	f0 e0       	ldi	r31, 0x00	; 0
  196:	cb 01       	movw	r24, r22
- 198:	43 96       	adiw	r24, 0x13	; 19
+ 198:	09 96       	adiw	r24, 0x09	; 9
  19a:	84 17       	cp	r24, r20
  19c:	95 07       	cpc	r25, r21
  19e:	14 f0       	brlt	.+4      	; 0x1a4 <main+0xfe>
@@ -299,7 +299,7 @@ _delay_loop_2(uint16_t __count)
  1a4:	20 e0       	ldi	r18, 0x00	; 0
  1a6:	30 e0       	ldi	r19, 0x00	; 0
  1a8:	cb 01       	movw	r24, r22
- 1aa:	43 97       	sbiw	r24, 0x13	; 19
+ 1aa:	09 97       	sbiw	r24, 0x09	; 9
  1ac:	48 17       	cp	r20, r24
  1ae:	59 07       	cpc	r21, r25
  1b0:	14 f0       	brlt	.+4      	; 0x1b6 <main+0x110>
@@ -311,7 +311,7 @@ _delay_loop_2(uint16_t __count)
  1bc:	20 e0       	ldi	r18, 0x00	; 0
  1be:	30 e0       	ldi	r19, 0x00	; 0
  1c0:	ce 01       	movw	r24, r28
- 1c2:	43 96       	adiw	r24, 0x13	; 19
+ 1c2:	09 96       	adiw	r24, 0x09	; 9
  1c4:	84 17       	cp	r24, r20
  1c6:	95 07       	cpc	r25, r21
  1c8:	14 f0       	brlt	.+4      	; 0x1ce <main+0x128>
@@ -320,7 +320,7 @@ _delay_loop_2(uint16_t __count)
  1ce:	e0 e0       	ldi	r30, 0x00	; 0
  1d0:	f0 e0       	ldi	r31, 0x00	; 0
  1d2:	ce 01       	movw	r24, r28
- 1d4:	43 97       	sbiw	r24, 0x13	; 19
+ 1d4:	09 97       	sbiw	r24, 0x09	; 9
  1d6:	48 17       	cp	r20, r24
  1d8:	59 07       	cpc	r21, r25
  1da:	14 f0       	brlt	.+4      	; 0x1e0 <main+0x13a>
@@ -527,15 +527,15 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
  358:	93 2b       	or	r25, r19
  35a:	90 93 12 01 	sts	0x0112, r25
  35e:	80 93 11 01 	sts	0x0111, r24
-					if ((time2-time1)>1000) { // try to ensure that the period will measure one rotation
+					if ((time2-time1)>2000) { // try to ensure that the period will measure one rotation
  362:	80 91 11 01 	lds	r24, 0x0111
  366:	90 91 12 01 	lds	r25, 0x0112
  36a:	20 91 13 01 	lds	r18, 0x0113
  36e:	30 91 14 01 	lds	r19, 0x0114
  372:	82 1b       	sub	r24, r18
  374:	93 0b       	sbc	r25, r19
- 376:	89 5e       	subi	r24, 0xE9	; 233
- 378:	93 40       	sbci	r25, 0x03	; 3
+ 376:	81 5d       	subi	r24, 0xD1	; 209
+ 378:	97 40       	sbci	r25, 0x07	; 7
  37a:	6c f1       	brlt	.+90     	; 0x3d6 <__vector_23+0x1e0>
 						period = time2-time1;
  37c:	80 91 11 01 	lds	r24, 0x0111
