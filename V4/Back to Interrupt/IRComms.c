@@ -99,7 +99,7 @@ int main(void) {
 
 				// if the LEDs are in line with the other module
 				cur_time = TCNT1;
-				if ( (cur_time < (near+20)) | (cur_time > (near-20)) | (cur_time < (far+20)) | (cur_time > (far-20)) ) {
+				if ( ((cur_time < (near+10))&(cur_time > (near-10))) | ((cur_time < (far+10))&(cur_time > (far-10))) ) {
 					PORTB |= (1<<PORTB0);
 				} else {
 					PORTB &= ~(1<<PORTB0);
@@ -215,16 +215,16 @@ ISR(TIMER0_COMPA_vect) { // timer0 interrupt routine
 			new_bit = (toSend & (1<<(7-bits_sent))) >> (7-bits_sent);
 			if(new_bit==1) { // turn on LEDs
 				PORTC |= (1<<PORTC3);
-				PORTB |= (1<<PORTB2);
+				//PORTB |= (1<<PORTB2);
 			} else { // turn off LEDs
 				PORTC &= ~(1<<PORTC3);
-				PORTB &= ~(1<<PORTB2);
+				//PORTB &= ~(1<<PORTB2);
 			}
 			pause = 1; // pause after sending a bit
 		} else { // pausing between bits
 			pause = 0; // send new bit on next interrupt
 			PORTC &= ~(1<<PORTC3); // ensure LEDs are low for pause
-			PORTB &= ~(1<<PORTB2);
+			//PORTB &= ~(1<<PORTB2);
 			bits_sent += 1; // increment bits_sent after each pause
 		}
 	} else { // if bits_sent >= 8, reset variables and pause for a bit

@@ -201,10 +201,10 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x000000a2                __vector_18
                 0x000000a2                __vector_20
  .text          0x000000a6      0x478 IRComms.o
-                0x000001f0                __vector_23
-                0x00000406                __vector_7
+                0x000001f6                __vector_23
+                0x0000040c                __vector_7
                 0x000000a6                main
-                0x00000424                __vector_14
+                0x0000042a                __vector_14
  .text          0x0000051e        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_divmodhi4.o)
  .text          0x0000051e        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  .text          0x0000051e        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
@@ -349,18 +349,18 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .debug_pubnames
                 0x00000000       0x4a IRComms.o
 
-.debug_info     0x00000000      0x2bc
+.debug_info     0x00000000      0x2bf
  *(.debug_info)
- .debug_info    0x00000000      0x2bc IRComms.o
+ .debug_info    0x00000000      0x2bf IRComms.o
  *(.gnu.linkonce.wi.*)
 
 .debug_abbrev   0x00000000      0x11f
  *(.debug_abbrev)
  .debug_abbrev  0x00000000      0x11f IRComms.o
 
-.debug_line     0x00000000      0x437
+.debug_line     0x00000000      0x41f
  *(.debug_line)
- .debug_line    0x00000000      0x437 IRComms.o
+ .debug_line    0x00000000      0x41f IRComms.o
 
 .debug_frame    0x00000000       0x50
  *(.debug_frame)
@@ -371,9 +371,9 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .debug_str     0x00000000      0x18e IRComms.o
                                 0x1cc (size before relaxing)
 
-.debug_loc      0x00000000       0xa8
+.debug_loc      0x00000000       0x90
  *(.debug_loc)
- .debug_loc     0x00000000       0xa8 IRComms.o
+ .debug_loc     0x00000000       0x90 IRComms.o
 
 .debug_macinfo
  *(.debug_macinfo)
