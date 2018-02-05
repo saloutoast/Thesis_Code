@@ -314,76 +314,76 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
  1a6:	98 2b       	or	r25, r24
  1a8:	90 93 0d 01 	sts	0x010D, r25
 			
-			if ((bit_time>=10)&(bit_time<=21)) { rcvd |= 0x40; }
+			if ((bit_time>=10)&(bit_time<=17)) { rcvd |= 0x40; }
  1ac:	80 91 0d 01 	lds	r24, 0x010D
  1b0:	90 91 0d 01 	lds	r25, 0x010D
  1b4:	8a 30       	cpi	r24, 0x0A	; 10
  1b6:	30 f0       	brcs	.+12     	; 0x1c4 <__vector_23+0x90>
- 1b8:	96 31       	cpi	r25, 0x16	; 22
+ 1b8:	92 31       	cpi	r25, 0x12	; 18
  1ba:	20 f4       	brcc	.+8      	; 0x1c4 <__vector_23+0x90>
  1bc:	80 91 09 01 	lds	r24, 0x0109
  1c0:	80 64       	ori	r24, 0x40	; 64
- 1c2:	0b c0       	rjmp	.+22     	; 0x1da <__vector_23+0xa6>
-			else if ((bit_time>=22)&(bit_time<=35)) { rcvd |= 0x20; }
+ 1c2:	3b c0       	rjmp	.+118    	; 0x23a <__vector_23+0x106>
+			else if ((bit_time>=22)&(bit_time<=29)) { rcvd |= 0x20; }
  1c4:	80 91 0d 01 	lds	r24, 0x010D
  1c8:	90 91 0d 01 	lds	r25, 0x010D
  1cc:	86 31       	cpi	r24, 0x16	; 22
- 1ce:	40 f0       	brcs	.+16     	; 0x1e0 <__vector_23+0xac>
- 1d0:	94 32       	cpi	r25, 0x24	; 36
- 1d2:	30 f4       	brcc	.+12     	; 0x1e0 <__vector_23+0xac>
+ 1ce:	30 f0       	brcs	.+12     	; 0x1dc <__vector_23+0xa8>
+ 1d0:	9e 31       	cpi	r25, 0x1E	; 30
+ 1d2:	20 f4       	brcc	.+8      	; 0x1dc <__vector_23+0xa8>
  1d4:	80 91 09 01 	lds	r24, 0x0109
  1d8:	80 62       	ori	r24, 0x20	; 32
- 1da:	80 93 09 01 	sts	0x0109, r24
- 1de:	a1 c0       	rjmp	.+322    	; 0x322 <__vector_23+0x1ee>
-			else if ((bit_time>=35)&(bit_time<=46)) { rcvd |= 0x10; }
- 1e0:	80 91 0d 01 	lds	r24, 0x010D
- 1e4:	90 91 0d 01 	lds	r25, 0x010D
- 1e8:	83 32       	cpi	r24, 0x23	; 35
- 1ea:	30 f0       	brcs	.+12     	; 0x1f8 <__vector_23+0xc4>
- 1ec:	9f 32       	cpi	r25, 0x2F	; 47
- 1ee:	20 f4       	brcc	.+8      	; 0x1f8 <__vector_23+0xc4>
- 1f0:	80 91 09 01 	lds	r24, 0x0109
- 1f4:	80 61       	ori	r24, 0x10	; 16
- 1f6:	f1 cf       	rjmp	.-30     	; 0x1da <__vector_23+0xa6>
-			else if ((bit_time>=47)&(bit_time<=59)) { rcvd |= 0x08; }
- 1f8:	80 91 0d 01 	lds	r24, 0x010D
- 1fc:	90 91 0d 01 	lds	r25, 0x010D
- 200:	8f 32       	cpi	r24, 0x2F	; 47
- 202:	30 f0       	brcs	.+12     	; 0x210 <__vector_23+0xdc>
- 204:	9c 33       	cpi	r25, 0x3C	; 60
- 206:	20 f4       	brcc	.+8      	; 0x210 <__vector_23+0xdc>
- 208:	80 91 09 01 	lds	r24, 0x0109
- 20c:	88 60       	ori	r24, 0x08	; 8
- 20e:	e5 cf       	rjmp	.-54     	; 0x1da <__vector_23+0xa6>
-			else if ((bit_time>=60)&(bit_time<=71)) { rcvd |= 0x04; }
- 210:	80 91 0d 01 	lds	r24, 0x010D
- 214:	90 91 0d 01 	lds	r25, 0x010D
- 218:	8c 33       	cpi	r24, 0x3C	; 60
- 21a:	30 f0       	brcs	.+12     	; 0x228 <__vector_23+0xf4>
- 21c:	98 34       	cpi	r25, 0x48	; 72
- 21e:	20 f4       	brcc	.+8      	; 0x228 <__vector_23+0xf4>
- 220:	80 91 09 01 	lds	r24, 0x0109
- 224:	84 60       	ori	r24, 0x04	; 4
- 226:	d9 cf       	rjmp	.-78     	; 0x1da <__vector_23+0xa6>
-			else if ((bit_time>=72)&(bit_time<=84)) { rcvd |= 0x02; }
- 228:	80 91 0d 01 	lds	r24, 0x010D
- 22c:	90 91 0d 01 	lds	r25, 0x010D
- 230:	88 34       	cpi	r24, 0x48	; 72
- 232:	30 f0       	brcs	.+12     	; 0x240 <__vector_23+0x10c>
- 234:	95 35       	cpi	r25, 0x55	; 85
- 236:	20 f4       	brcc	.+8      	; 0x240 <__vector_23+0x10c>
- 238:	80 91 09 01 	lds	r24, 0x0109
- 23c:	82 60       	ori	r24, 0x02	; 2
- 23e:	cd cf       	rjmp	.-102    	; 0x1da <__vector_23+0xa6>
-			else if ((bit_time>=85)&(bit_time<=100)) { // eighth bit has been received
+ 1da:	2f c0       	rjmp	.+94     	; 0x23a <__vector_23+0x106>
+			else if ((bit_time>=35)&(bit_time<=42)) { rcvd |= 0x10; }
+ 1dc:	80 91 0d 01 	lds	r24, 0x010D
+ 1e0:	90 91 0d 01 	lds	r25, 0x010D
+ 1e4:	83 32       	cpi	r24, 0x23	; 35
+ 1e6:	30 f0       	brcs	.+12     	; 0x1f4 <__vector_23+0xc0>
+ 1e8:	9b 32       	cpi	r25, 0x2B	; 43
+ 1ea:	20 f4       	brcc	.+8      	; 0x1f4 <__vector_23+0xc0>
+ 1ec:	80 91 09 01 	lds	r24, 0x0109
+ 1f0:	80 61       	ori	r24, 0x10	; 16
+ 1f2:	23 c0       	rjmp	.+70     	; 0x23a <__vector_23+0x106>
+			else if ((bit_time>=47)&(bit_time<=54)) { rcvd |= 0x08; }
+ 1f4:	80 91 0d 01 	lds	r24, 0x010D
+ 1f8:	90 91 0d 01 	lds	r25, 0x010D
+ 1fc:	8f 32       	cpi	r24, 0x2F	; 47
+ 1fe:	30 f0       	brcs	.+12     	; 0x20c <__vector_23+0xd8>
+ 200:	97 33       	cpi	r25, 0x37	; 55
+ 202:	20 f4       	brcc	.+8      	; 0x20c <__vector_23+0xd8>
+ 204:	80 91 09 01 	lds	r24, 0x0109
+ 208:	88 60       	ori	r24, 0x08	; 8
+ 20a:	17 c0       	rjmp	.+46     	; 0x23a <__vector_23+0x106>
+			else if ((bit_time>=60)&(bit_time<=67)) { rcvd |= 0x04; }
+ 20c:	80 91 0d 01 	lds	r24, 0x010D
+ 210:	90 91 0d 01 	lds	r25, 0x010D
+ 214:	8c 33       	cpi	r24, 0x3C	; 60
+ 216:	30 f0       	brcs	.+12     	; 0x224 <__vector_23+0xf0>
+ 218:	94 34       	cpi	r25, 0x44	; 68
+ 21a:	20 f4       	brcc	.+8      	; 0x224 <__vector_23+0xf0>
+ 21c:	80 91 09 01 	lds	r24, 0x0109
+ 220:	84 60       	ori	r24, 0x04	; 4
+ 222:	0b c0       	rjmp	.+22     	; 0x23a <__vector_23+0x106>
+			else if ((bit_time>=72)&(bit_time<=79)) { rcvd |= 0x02; }
+ 224:	80 91 0d 01 	lds	r24, 0x010D
+ 228:	90 91 0d 01 	lds	r25, 0x010D
+ 22c:	88 34       	cpi	r24, 0x48	; 72
+ 22e:	40 f0       	brcs	.+16     	; 0x240 <__vector_23+0x10c>
+ 230:	90 35       	cpi	r25, 0x50	; 80
+ 232:	30 f4       	brcc	.+12     	; 0x240 <__vector_23+0x10c>
+ 234:	80 91 09 01 	lds	r24, 0x0109
+ 238:	82 60       	ori	r24, 0x02	; 2
+ 23a:	80 93 09 01 	sts	0x0109, r24
+ 23e:	71 c0       	rjmp	.+226    	; 0x322 <__vector_23+0x1ee>
+			else if ((bit_time>=85)&(bit_time<=92)) { // eighth bit has been received
  240:	80 91 0d 01 	lds	r24, 0x010D
  244:	90 91 0d 01 	lds	r25, 0x010D
  248:	85 35       	cpi	r24, 0x55	; 85
  24a:	08 f4       	brcc	.+2      	; 0x24e <__vector_23+0x11a>
- 24c:	6a c0       	rjmp	.+212    	; 0x322 <__vector_23+0x1ee>
- 24e:	95 36       	cpi	r25, 0x65	; 101
+ 24c:	64 c0       	rjmp	.+200    	; 0x316 <__vector_23+0x1e2>
+ 24e:	9d 35       	cpi	r25, 0x5D	; 93
  250:	08 f0       	brcs	.+2      	; 0x254 <__vector_23+0x120>
- 252:	67 c0       	rjmp	.+206    	; 0x322 <__vector_23+0x1ee>
+ 252:	61 c0       	rjmp	.+194    	; 0x316 <__vector_23+0x1e2>
 				rcvd |= 0x01; 
  254:	80 91 09 01 	lds	r24, 0x0109
  258:	81 60       	ori	r24, 0x01	; 1
@@ -465,8 +465,11 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 					TCNT1 = 0;
  30e:	10 92 85 00 	sts	0x0085, r1
  312:	10 92 84 00 	sts	0x0084, r1
-				}
 
+				rcving = 0; // reset receiving variables
+				TCNT2 = 0;
+				rcvd = 0;
+			}  else { // bad rising edge means message is bad, discard and reset
 				rcving = 0; // reset receiving variables
  316:	10 92 08 01 	sts	0x0108, r1
 				TCNT2 = 0;

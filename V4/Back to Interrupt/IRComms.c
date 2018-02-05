@@ -144,13 +144,13 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 			bit_time = 0;
 			bit_time |= TCNT2; // time that rising edge was detected
 			
-			if ((bit_time>=10)&(bit_time<=21)) { rcvd |= 0x40; }
-			else if ((bit_time>=22)&(bit_time<=35)) { rcvd |= 0x20; }
-			else if ((bit_time>=35)&(bit_time<=46)) { rcvd |= 0x10; }
-			else if ((bit_time>=47)&(bit_time<=59)) { rcvd |= 0x08; }
-			else if ((bit_time>=60)&(bit_time<=71)) { rcvd |= 0x04; }
-			else if ((bit_time>=72)&(bit_time<=84)) { rcvd |= 0x02; }
-			else if ((bit_time>=85)&(bit_time<=100)) { // eighth bit has been received
+			if ((bit_time>=10)&(bit_time<=17)) { rcvd |= 0x40; }
+			else if ((bit_time>=22)&(bit_time<=29)) { rcvd |= 0x20; }
+			else if ((bit_time>=35)&(bit_time<=42)) { rcvd |= 0x10; }
+			else if ((bit_time>=47)&(bit_time<=54)) { rcvd |= 0x08; }
+			else if ((bit_time>=60)&(bit_time<=67)) { rcvd |= 0x04; }
+			else if ((bit_time>=72)&(bit_time<=79)) { rcvd |= 0x02; }
+			else if ((bit_time>=85)&(bit_time<=92)) { // eighth bit has been received
 				rcvd |= 0x01; 
 				rcv_sx = 1;
 				lastRcv = 0;
@@ -178,7 +178,11 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				rcving = 0; // reset receiving variables
 				TCNT2 = 0;
 				rcvd = 0;
-			}			
+			}  else { // bad rising edge means message is bad, discard and reset
+				rcving = 0; // reset receiving variables
+				TCNT2 = 0;
+				rcvd = 0;
+			}		
 		}
 	}
 
