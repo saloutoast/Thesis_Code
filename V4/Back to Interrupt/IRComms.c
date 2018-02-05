@@ -18,7 +18,7 @@ static volatile int bits_sent = 0; // variables for sending ISR
 static volatile int new_bit = 0;
 static volatile int pause = 0;
 
-static volatile char toSend = 0xFF; // message variables
+static volatile char toSend = 0xAA; // message variables
 static volatile char toRcv1 = 0xDB;
 static volatile char toRcv2 = 0xA5;
 
@@ -86,7 +86,8 @@ int main(void) {
 
 	while(1) {
 		
-		//neighbor marking based on times of messages received, use Timer1
+		far++;
+		/* //neighbor marking based on times of messages received, use Timer1
 		if (msg_rcvd==2) { // period is calculated
 
 			if (ready==0) {
@@ -106,7 +107,7 @@ int main(void) {
 
 			}
 
-		}
+		} */
 
 	}
 
@@ -114,7 +115,7 @@ int main(void) {
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
-	if (rcving==0) {
+	/* if (rcving==0) {
 
 		TCNT2=0;
 		rcving=1;
@@ -128,7 +129,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
 	} else { // first rising edge has been detected (rcving=1)
 
-		if (!(ACSR&(1<<ACISO))) { // check for first falling edge
+		if (!(ACSR&(1<<ACIS0))) { // check for first falling edge
 
 			distance = 0;
 			distance |= TCNT2; // use timer value for distance
@@ -175,13 +176,13 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				rcvd = 0;
 			}			
 		}
-	}
+	} */
 
-	/* // simple code to follow pulse train
+	// simple code to follow pulse train
 	while(ACSR & (1<<ACO)) {
-		PORTB |= (1<<PORTB2);
+		PORTB |= (1<<PORTB0);
 	}
-	PORTB &= ~(1<<PORTB2); */
+	PORTB &= ~(1<<PORTB0);
 
 } 
 
@@ -194,7 +195,7 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 }
 
 // routine for timer0 to send messages, pause for a longer time between messages
-ISR(TIMER0_COMPA_VECT) { // timer0 interrupt routine
+ISR(TIMER0_COMPA_vect) { // timer0 interrupt routine
 
 	if (bits_sent<8) { // if the whole message has not been sent
 		if (pause==0) { // 0,1 half of bit to be sent
@@ -214,10 +215,12 @@ ISR(TIMER0_COMPA_VECT) { // timer0 interrupt routine
 			bits_sent += 1; // increment bits_sent after each pause
 		}
 	} else { // if bits_sent >= 8, reset variables and pause for a bit
-		if (bits_sent>=24) { // wait for 2 messages, send again
+		if (bits_sent>=72) { // wait for 4 messages, send again
 			bits_sent = 0; 
+		} else {
+			bits_sent+=1; // increment bits_sent for timing between messages
 		}
-		bits_sent+=1; // increment bits_sent for timing between messages
+		
 		// TODO: could disable ISR here, for send_msg function?
 	}
 
