@@ -122,8 +122,8 @@ _delay_loop_2(uint16_t __count)
 		//switch E.P.M. direction 1 
 		PORTB |= (1<<PORTB1); // set middle LED
   9e:	29 9a       	sbi	0x05, 1	; 5
-		PORTB |= (1<<7);//activate E.P.M direction 1
-  a0:	2f 9a       	sbi	0x05, 7	; 5
+		PORTB |= (1<<6);//activate E.P.M direction 1
+  a0:	2e 9a       	sbi	0x05, 6	; 5
     can be achieved.
 */
 void

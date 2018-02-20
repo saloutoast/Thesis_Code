@@ -69,7 +69,7 @@ int main(void) {
 		
 		//switch E.P.M. direction 1 
 		PORTB |= (1<<PORTB1); // set middle LED
-		PORTB |= (1<<7);//activate E.P.M direction 1
+		PORTB |= (1<<6);//activate E.P.M direction 1
 		_delay_us(80);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
