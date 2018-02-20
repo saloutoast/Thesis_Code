@@ -23,11 +23,9 @@ static volatile char toRcv1 = 0xDB;
 static volatile char toRcv2 = 0xA5;
 
 
-static volatile int time1 = 0; // neighbor marking variables
-static volatile int time2 = 0;
-static volatile int period = 0;
-static volatile int msg_rcvd = 0;
-static volatile int rcv_time = 0;
+static volatile int rcv_time = 0; // neighbor marking variables
+static volatile int near = 0;
+static volatile int far = 0;
 
 int main(void) {
 
@@ -80,40 +78,28 @@ int main(void) {
 	
 	sei(); // enable interrupts	
 
-	int near = 0;
-	int far = 0;
-	int ready = 0;
 	int cur_time = 0;
 
 	// at 140 rpm, period should be about 3344 timer1 counts
 	int per140 = 3344;
 
-	near = 836; // per140/4;
+	near = 836; // initial guess
 	far = 3*near;
 
 	while(1) {
 		//neighbor marking based on times of messages received, use Timer1
-		/* if (msg_rcvd==2) { // period is calculated
-
-			if (ready==0) {
-				near = period/4; 
-				far = 3*near;
-				ready = 1;
-			} */
-			
+		
 		if (rcv_sx==1) { // got a new message
 
 			// if the LEDs are in line with the other module
 			cur_time = TCNT1;
-			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
+			if ( ((cur_time < (near+7))&(cur_time > (near-7))) | ((cur_time < (far+7))&(cur_time > (far-7))) ) {
 				PORTB |= (1<<PORTB0);
 			} else {
 				PORTB &= ~(1<<PORTB0);
 			}
 
 		}
-
-		//}
 
 	}
 
@@ -168,22 +154,16 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				//if (lastRcv==toRcv1) { PORTB |= (1<<PORTB2); }
 				//if (lastRcv==toRcv2) { PORTB |= (1<<PORTB0); }
 
-				/* if (msg_rcvd==1) {
-					time2 |= TCNT1;
-					if ((time2-time1)>2000) { // try to ensure that the period will measure one rotation
-						period = time2-time1;
-						msg_rcvd = 2;
-					}
-				} else if (msg_rcvd==0) { 
-					time1 |= TCNT1; 
-					msg_rcvd = 1;
+				rcv_time |= TCNT1;
+
+				if (rcv_time >= 2000) {
+					near = rcv_time/4;
+					far = 3*near;
 				}
 
-				if (msg_rcvd==2) { // once period can be calculated, set timer for neighbor marking
-					TCNT1 = 0;
-				} */
 
 				TCNT1 = 0; // reset timer1 on received messages
+				rcv_time = 0;
 
 				rcving = 0; // reset receiving variables
 				TCNT2 = 0;
