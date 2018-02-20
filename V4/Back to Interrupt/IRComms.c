@@ -93,7 +93,7 @@ int main(void) {
 
 			// if the LEDs are in line with the other module
 			cur_time = TCNT1;
-			if ( ((cur_time < (near+7))&(cur_time > (near-7))) | ((cur_time < (far+7))&(cur_time > (far-7))) ) {
+			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
 				PORTB |= (1<<PORTB0);
 			} else {
 				PORTB &= ~(1<<PORTB0);
@@ -156,7 +156,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
 				rcv_time |= TCNT1;
 
-				if (rcv_time >= 2000) {
+				if (rcv_time >= 1000) {
 					near = rcv_time/4;
 					far = 3*near;
 				}

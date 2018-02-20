@@ -265,7 +265,7 @@ _delay_loop_2(uint16_t __count)
 			cur_time = TCNT1;
  164:	60 91 84 00 	lds	r22, 0x0084
  168:	70 91 85 00 	lds	r23, 0x0085
-			if ( ((cur_time < (near+7))&(cur_time > (near-7))) | ((cur_time < (far+7))&(cur_time > (far-7))) ) {
+			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
  16c:	40 91 11 01 	lds	r20, 0x0111
  170:	50 91 12 01 	lds	r21, 0x0112
  174:	e0 91 11 01 	lds	r30, 0x0111
@@ -276,7 +276,7 @@ _delay_loop_2(uint16_t __count)
  188:	30 91 14 01 	lds	r19, 0x0114
  18c:	a0 e0       	ldi	r26, 0x00	; 0
  18e:	b0 e0       	ldi	r27, 0x00	; 0
- 190:	06 96       	adiw	r24, 0x06	; 6
+ 190:	04 96       	adiw	r24, 0x04	; 4
  192:	86 17       	cp	r24, r22
  194:	97 07       	cpc	r25, r23
  196:	14 f0       	brlt	.+4      	; 0x19c <main+0xf6>
@@ -284,7 +284,7 @@ _delay_loop_2(uint16_t __count)
  19a:	b0 e0       	ldi	r27, 0x00	; 0
  19c:	80 e0       	ldi	r24, 0x00	; 0
  19e:	90 e0       	ldi	r25, 0x00	; 0
- 1a0:	26 50       	subi	r18, 0x06	; 6
+ 1a0:	24 50       	subi	r18, 0x04	; 4
  1a2:	30 40       	sbci	r19, 0x00	; 0
  1a4:	62 17       	cp	r22, r18
  1a6:	73 07       	cpc	r23, r19
@@ -295,7 +295,7 @@ _delay_loop_2(uint16_t __count)
  1b0:	9b 23       	and	r25, r27
  1b2:	20 e0       	ldi	r18, 0x00	; 0
  1b4:	30 e0       	ldi	r19, 0x00	; 0
- 1b6:	4a 5f       	subi	r20, 0xFA	; 250
+ 1b6:	4c 5f       	subi	r20, 0xFC	; 252
  1b8:	5f 4f       	sbci	r21, 0xFF	; 255
  1ba:	46 17       	cp	r20, r22
  1bc:	57 07       	cpc	r21, r23
@@ -304,7 +304,7 @@ _delay_loop_2(uint16_t __count)
  1c2:	30 e0       	ldi	r19, 0x00	; 0
  1c4:	40 e0       	ldi	r20, 0x00	; 0
  1c6:	50 e0       	ldi	r21, 0x00	; 0
- 1c8:	36 97       	sbiw	r30, 0x06	; 6
+ 1c8:	34 97       	sbiw	r30, 0x04	; 4
  1ca:	6e 17       	cp	r22, r30
  1cc:	7f 07       	cpc	r23, r31
  1ce:	14 f0       	brlt	.+4      	; 0x1d4 <main+0x12e>
@@ -507,11 +507,11 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
  342:	90 93 10 01 	sts	0x0110, r25
  346:	80 93 0f 01 	sts	0x010F, r24
 
-				if (rcv_time >= 2000) {
+				if (rcv_time >= 1000) {
  34a:	80 91 0f 01 	lds	r24, 0x010F
  34e:	90 91 10 01 	lds	r25, 0x0110
- 352:	80 5d       	subi	r24, 0xD0	; 208
- 354:	97 40       	sbci	r25, 0x07	; 7
+ 352:	88 5e       	subi	r24, 0xE8	; 232
+ 354:	93 40       	sbci	r25, 0x03	; 3
  356:	cc f0       	brlt	.+50     	; 0x38a <__vector_23+0x1a6>
 					near = rcv_time/4;
  358:	80 91 0f 01 	lds	r24, 0x010F
