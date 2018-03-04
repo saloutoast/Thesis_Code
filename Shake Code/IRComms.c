@@ -45,11 +45,15 @@ int main(void)
 
 		setLED(0,0,50);//set led to green
 		PORTD |= (1<<6);//activate E.P.M direction 2
-		_delay_us(80);//leave on for 80us
+		_delay_us(160);//leave on for 80us
 		PORTD &=~(1<<6);//deactivate E.P.M
 		PORTD &=~(1<<7);//deactivate E.P.M
 		setLED(0,0,0);//set led red
-		_delay_ms(140);//delay 140ms
+		int ii = 0;
+		while (ii<5) {
+			_delay_ms(140);//delay 140ms
+			ii++;
+		}
 
 	}
 	//end user loop
