@@ -68,7 +68,7 @@ int main(void) {
 	PORTB |= (1<<PORTB1); // yellow
 	PORTB |= (1<<PORTB2); // red
 	PORTC |= (1<<PORTC3); // IR
-
+	
 	_delay_ms(200);  
 
 	PORTB &= ~(1<<PORTB0); // turn off LEDs

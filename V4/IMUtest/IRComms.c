@@ -6,6 +6,8 @@
 #include <avr/interrupt.h>
 #include <stdlib.h>
 #include <util/delay.h>
+#include <stdint.h>
+#include <inttypes.h>
 
 #include <math.h>
 #include "i2c_master.h"
@@ -36,6 +38,19 @@ int main(void) {
 
 	imu_init();
 
+	// test power by turning on LEDs
+	PORTB |= (1<<PORTB0); // green
+	PORTB |= (1<<PORTB1); // yellow
+	PORTB |= (1<<PORTB2); // red
+	//PORTC |= (1<<PORTC3); // IR
+	
+	_delay_ms(200);  
+
+	PORTB &= ~(1<<PORTB0); // turn off LEDs
+	//PORTB &= ~(1<<PORTB1);
+	PORTB &= ~(1<<PORTB2);
+	//PORTC &= ~(1<<PORTC3);
+
 	//sei(); // enable interrupts
 	
 	//int ii=0;
@@ -55,7 +70,7 @@ int main(void) {
 
 		whoAmI(); // test comms
 
-		_delay_ms(100); // delay to keep loop from running too quickly
+		//_delay_ms(100); // delay to keep loop from running too quickly
 	}
 
 }
@@ -70,6 +85,8 @@ void imu_init(void) {
 
 void whoAmI(void) {
 	
+	PORTB &= ~(1<<PORTB1);	
+
 	i2c_start(LSM9DS1_WRITE);
 	i2c_write(0x0F); // who am I register 
 	i2c_stop();
@@ -82,6 +99,10 @@ void whoAmI(void) {
 		PORTB |= (1<<PORTB0);
 	} else {
 		PORTB |= (1<<PORTB2);
-	}
+	} 
+
+	_delay_ms(200);
+
+	PORTB |= (1<<PORTB1);
 }
 

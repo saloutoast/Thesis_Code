@@ -217,7 +217,7 @@ _delay_loop_2(uint16_t __count)
 		__ticks = (uint16_t) (__ms * 10.0);
 		while(__ticks)
  126:	d9 f7       	brne	.-10     	; 0x11e <main+0x78>
-
+	
 	_delay_ms(200);  
 
 	PORTB &= ~(1<<PORTB0); // turn off LEDs

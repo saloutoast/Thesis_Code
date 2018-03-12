@@ -114,7 +114,7 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x346
+.text           0x00000000      0x362
  *(.vectors)
  .vectors       0x00000000       0x68 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm328p.o
                 0x00000000                __vectors
@@ -192,30 +192,30 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x0000007c                __vector_16
                 0x0000007c                __vector_18
                 0x0000007c                __vector_20
- .text          0x00000080       0x66 IRComms.o
-                0x000000b0                imu_init
+ .text          0x00000080       0x82 IRComms.o
+                0x000000c6                imu_init
                 0x00000080                whoAmI
-                0x000000b6                main
- .text          0x000000e6      0x25c i2c_master.o
-                0x0000013a                i2c_write
-                0x00000172                i2c_read_nack
-                0x0000015e                i2c_read_ack
-                0x000002a8                i2c_readReg
-                0x000001d6                i2c_receive
-                0x000000ee                i2c_start
-                0x00000186                i2c_transmit
-                0x0000033a                i2c_stop
-                0x000000e6                i2c_init
-                0x0000024c                i2c_writeReg
- .text          0x00000342        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000342                . = ALIGN (0x2)
+                0x000000cc                main
+ .text          0x00000102      0x25c i2c_master.o
+                0x00000156                i2c_write
+                0x0000018e                i2c_read_nack
+                0x0000017a                i2c_read_ack
+                0x000002c4                i2c_readReg
+                0x000001f2                i2c_receive
+                0x0000010a                i2c_start
+                0x000001a2                i2c_transmit
+                0x00000356                i2c_stop
+                0x00000102                i2c_init
+                0x00000268                i2c_writeReg
+ .text          0x0000035e        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x0000035e                . = ALIGN (0x2)
  *(.text.*)
- .text.libgcc   0x00000342        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000342                . = ALIGN (0x2)
+ .text.libgcc   0x0000035e        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x0000035e                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x00000342        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x00000342                exit
-                0x00000342                _exit
+ .fini9         0x0000035e        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x0000035e                exit
+                0x0000035e                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -234,11 +234,11 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x00000342        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .fini0         0x0000035e        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  *(.fini0)
-                0x00000346                _etext = .
+                0x00000362                _etext = .
 
-.data           0x00800100        0x0 load address 0x00000346
+.data           0x00800100        0x0 load address 0x00000362
                 0x00800100                PROVIDE (__data_start, .)
  *(.data)
  .data          0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm328p.o
@@ -263,8 +263,8 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.bss*)
  *(COMMON)
                 0x00800100                PROVIDE (__bss_end, .)
-                0x00000346                __data_load_start = LOADADDR (.data)
-                0x00000346                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x00000362                __data_load_start = LOADADDR (.data)
+                0x00000362                __data_load_end = (__data_load_start + SIZEOF (.data))
 
 .noinit         0x00800100        0x0
                 0x00800100                PROVIDE (__noinit_start, .)
@@ -337,21 +337,21 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .debug_pubnames
                 0x00000033       0xad i2c_master.o
 
-.debug_info     0x00000000      0x4d0
+.debug_info     0x00000000      0x528
  *(.debug_info)
- .debug_info    0x00000000      0x15a IRComms.o
- .debug_info    0x0000015a      0x376 i2c_master.o
+ .debug_info    0x00000000      0x1b2 IRComms.o
+ .debug_info    0x000001b2      0x376 i2c_master.o
  *(.gnu.linkonce.wi.*)
 
-.debug_abbrev   0x00000000      0x1f8
+.debug_abbrev   0x00000000      0x20e
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x103 IRComms.o
- .debug_abbrev  0x00000103       0xf5 i2c_master.o
+ .debug_abbrev  0x00000000      0x119 IRComms.o
+ .debug_abbrev  0x00000119       0xf5 i2c_master.o
 
-.debug_line     0x00000000      0x4de
+.debug_line     0x00000000      0x52f
  *(.debug_line)
- .debug_line    0x00000000      0x1cd IRComms.o
- .debug_line    0x000001cd      0x311 i2c_master.o
+ .debug_line    0x00000000      0x21e IRComms.o
+ .debug_line    0x0000021e      0x311 i2c_master.o
 
 .debug_frame    0x00000000       0xf0
  *(.debug_frame)
@@ -365,15 +365,12 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  .debug_str     0x000000e3       0xb4 i2c_master.o
                                 0x16f (size before relaxing)
 
-.debug_loc      0x00000000      0x2ac
+.debug_loc      0x00000000      0x28c
  *(.debug_loc)
- .debug_loc     0x00000000       0x50 IRComms.o
- .debug_loc     0x00000050      0x25c i2c_master.o
+ .debug_loc     0x00000000       0x30 IRComms.o
+ .debug_loc     0x00000030      0x25c i2c_master.o
 
 .debug_macinfo
  *(.debug_macinfo)
 OUTPUT(IRComms.elf elf32-avr)
 LOAD linker stubs
-
-.debug_ranges   0x00000000       0x48
- .debug_ranges  0x00000000       0x48 IRComms.o
