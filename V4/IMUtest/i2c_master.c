@@ -9,17 +9,17 @@
 
 #define F_SCL 100000UL // SCL frequency
 #define Prescaler 1
-#define TWBR_val ((((F_CPU / F_SCL) / Prescaler) - 16 ) / 2)
+#define TWBR_val 0x20 // calculated: ((((F_CPU / F_SCL) / Prescaler) - 16 ) / 2)
 
 void i2c_init(void)
 {
-	TWBR = (uint8_t)TWBR_val;
+	TWBR = (char)TWBR_val;
 }
 
-uint8_t i2c_start(uint8_t address)
+char i2c_start(char address)
 {
 	// reset TWI control register
-	TWCR = 0;
+	//TWCR = 0;
 	// transmit START condition 
 	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
 	// wait for end of transmission
@@ -36,13 +36,14 @@ uint8_t i2c_start(uint8_t address)
 	while( !(TWCR & (1<<TWINT)) );
 	
 	// check if the device has acknowledged the READ / WRITE mode
-	uint8_t twst = TW_STATUS & 0xF8;
-	if ( (twst != TW_MT_SLA_ACK) && (twst != TW_MR_SLA_ACK) ) return 1;
+	char twst = TW_STATUS & 0xF8;
+	if ( (twst != TW_MT_SLA_ACK) && (twst != TW_MR_SLA_ACK) ) {return 2;}
 	
+
 	return 0;
 }
 
-uint8_t i2c_write(uint8_t data)
+char i2c_write(char data)
 {
 	// load data into data register
 	TWDR = data;
@@ -56,35 +57,35 @@ uint8_t i2c_write(uint8_t data)
 	return 0;
 }
 
-uint8_t i2c_read_ack(void)
+char i2c_read_ack(void)
 {
 	
 	// start TWI module and acknowledge data after reception
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWEA); 
 	// wait for end of transmission
-	while( !(TWCR & (1<<TWINT)) );
+	while( !(TWCR & (1<<TWINT)) ) {;}
 	// return received data from TWDR
 	return TWDR;
 }
 
-uint8_t i2c_read_nack(void)
+char i2c_read_nack(void)
 {
 	
 	// start receiving without acknowledging reception
 	TWCR = (1<<TWINT) | (1<<TWEN);
 	// wait for end of transmission
-	while( !(TWCR & (1<<TWINT)) );
+	while( !(TWCR & (1<<TWINT)) ) {;}
 	// return received data from TWDR
 	return TWDR;
 }
 
-uint8_t i2c_transmit(uint8_t address, uint8_t* data, uint16_t length)
+char i2c_transmit(char address, char* data, int length)
 {
-	if (i2c_start(address | I2C_WRITE)) return 1;
+	if (i2c_start(address | I2C_WRITE)) {return 1;}
 	
-	for (uint16_t i = 0; i < length; i++)
+	for (int i = 0; i < length; i++)
 	{
-		if (i2c_write(data[i])) return 1;
+		if (i2c_write(data[i])) {return 1;}
 	}
 	
 	i2c_stop();
@@ -92,11 +93,11 @@ uint8_t i2c_transmit(uint8_t address, uint8_t* data, uint16_t length)
 	return 0;
 }
 
-uint8_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length)
+char i2c_receive(char address, char* data, int length)
 {
-	if (i2c_start(address | I2C_READ)) return 1;
+	if (i2c_start(address | I2C_READ)) {return 1;}
 	
-	for (uint16_t i = 0; i < (length-1); i++)
+	for (int i = 0; i < (length-1); i++)
 	{
 		data[i] = i2c_read_ack();
 	}
@@ -107,15 +108,15 @@ uint8_t i2c_receive(uint8_t address, uint8_t* data, uint16_t length)
 	return 0;
 }
 
-uint8_t i2c_writeReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length)
+char i2c_writeReg(char devaddr, char regaddr, char* data, int length)
 {
-	if (i2c_start(devaddr | 0x00)) return 1;
+	if (i2c_start(devaddr | 0x00)) { return 1; }
 
 	i2c_write(regaddr);
 
-	for (uint16_t i = 0; i < length; i++)
+	for (int i = 0; i < length; i++)
 	{
-		if (i2c_write(data[i])) return 1;
+		if (i2c_write(data[i])){ return 1; }
 	}
 
 	i2c_stop();
@@ -123,15 +124,15 @@ uint8_t i2c_writeReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t l
 	return 0;
 }
 
-uint8_t i2c_readReg(uint8_t devaddr, uint8_t regaddr, uint8_t* data, uint16_t length)
+char i2c_readReg(char devaddr, char regaddr, char* data, int length)
 {
-	if (i2c_start(devaddr)) return 1;
+	if (i2c_start(devaddr)) { return 1; }
 
 	i2c_write(regaddr);
 
-	if (i2c_start(devaddr | 0x01)) return 1;
+	if (i2c_start(devaddr | 0x01)) { return 1; }
 
-	for (uint16_t i = 0; i < (length-1); i++)
+	for (int i = 0; i < (length-1); i++)
 	{
 		data[i] = i2c_read_ack();
 	}
