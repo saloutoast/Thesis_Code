@@ -3,25 +3,25 @@ IRComms.elf:     file format elf32-avr
 
 Sections:
 Idx Name          Size      VMA       LMA       File off  Algn
-  0 .text         0000010c  00000000  00000000  00000054  2**1
+  0 .text         00000104  00000000  00000000  00000054  2**1
                   CONTENTS, ALLOC, LOAD, READONLY, CODE
-  1 .debug_aranges 00000020  00000000  00000000  00000160  2**0
+  1 .debug_aranges 00000020  00000000  00000000  00000158  2**0
                   CONTENTS, READONLY, DEBUGGING
-  2 .debug_pubnames 0000001b  00000000  00000000  00000180  2**0
+  2 .debug_pubnames 0000001b  00000000  00000000  00000178  2**0
                   CONTENTS, READONLY, DEBUGGING
-  3 .debug_info   00000325  00000000  00000000  0000019b  2**0
+  3 .debug_info   00000314  00000000  00000000  00000193  2**0
                   CONTENTS, READONLY, DEBUGGING
-  4 .debug_abbrev 0000011d  00000000  00000000  000004c0  2**0
+  4 .debug_abbrev 0000011d  00000000  00000000  000004a7  2**0
                   CONTENTS, READONLY, DEBUGGING
-  5 .debug_line   0000021f  00000000  00000000  000005dd  2**0
+  5 .debug_line   00000211  00000000  00000000  000005c4  2**0
                   CONTENTS, READONLY, DEBUGGING
-  6 .debug_frame  00000020  00000000  00000000  000007fc  2**2
+  6 .debug_frame  00000020  00000000  00000000  000007d8  2**2
                   CONTENTS, READONLY, DEBUGGING
-  7 .debug_str    00000161  00000000  00000000  0000081c  2**0
+  7 .debug_str    00000161  00000000  00000000  000007f8  2**0
                   CONTENTS, READONLY, DEBUGGING
-  8 .debug_loc    000000f4  00000000  00000000  0000097d  2**0
+  8 .debug_loc    000000f0  00000000  00000000  00000959  2**0
                   CONTENTS, READONLY, DEBUGGING
-  9 .debug_ranges 00000108  00000000  00000000  00000a71  2**0
+  9 .debug_ranges 000000c0  00000000  00000000  00000a49  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -62,7 +62,7 @@ Disassembly of section .text:
   70:	de bf       	out	0x3e, r29	; 62
   72:	cd bf       	out	0x3d, r28	; 61
   74:	0e 94 40 00 	call	0x80	; 0x80 <main>
-  78:	0c 94 84 00 	jmp	0x108	; 0x108 <_exit>
+  78:	0c 94 80 00 	jmp	0x100	; 0x100 <_exit>
 
 0000007c <__bad_interrupt>:
   7c:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
@@ -100,166 +100,131 @@ int main(void) {
 	DDRC = (1<<DDC3);
   94:	88 e0       	ldi	r24, 0x08	; 8
   96:	87 b9       	out	0x07, r24	; 7
-    can be achieved.
-*/
-void
-_delay_loop_1(uint8_t __count)
-{
-	__asm__ volatile (
-  98:	a5 ed       	ldi	r26, 0xD5	; 213
     milliseconds can be achieved.
  */
 void
 _delay_loop_2(uint16_t __count)
 {
 	__asm__ volatile (
-  9a:	48 ec       	ldi	r20, 0xC8	; 200
-  9c:	50 e0       	ldi	r21, 0x00	; 0
+  98:	60 ef       	ldi	r22, 0xF0	; 240
+  9a:	70 e0       	ldi	r23, 0x00	; 0
 	int ii=0;
 	while(1) {
 		// loop
 		
 		//switch E.P.M. direction 1 
 		PORTB |= (1<<PORTB1); // set middle LED
-  9e:	60 ee       	ldi	r22, 0xE0	; 224
-  a0:	71 e0       	ldi	r23, 0x01	; 1
-  a2:	29 9a       	sbi	0x05, 1	; 5
+  9c:	48 ec       	ldi	r20, 0xC8	; 200
+  9e:	50 e0       	ldi	r21, 0x00	; 0
+  a0:	29 9a       	sbi	0x05, 1	; 5
 		PORTB |= (1<<6);//activate E.P.M direction 1
-  a4:	2e 9a       	sbi	0x05, 6	; 5
-    can be achieved.
-*/
-void
-_delay_loop_1(uint8_t __count)
-{
-	__asm__ volatile (
-  a6:	8a 2f       	mov	r24, r26
-  a8:	8a 95       	dec	r24
-  aa:	f1 f7       	brne	.-4      	; 0xa8 <main+0x28>
-		_delay_us(80);//leave on for 80us
+  a2:	2e 9a       	sbi	0x05, 6	; 5
+  a4:	cb 01       	movw	r24, r22
+  a6:	01 97       	sbiw	r24, 0x01	; 1
+  a8:	f1 f7       	brne	.-4      	; 0xa6 <main+0x26>
+		_delay_us(120);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
-  ac:	2e 98       	cbi	0x05, 6	; 5
+  aa:	2e 98       	cbi	0x05, 6	; 5
 		PORTB &=~(1<<7);//deactivate E.P.M
-  ae:	2f 98       	cbi	0x05, 7	; 5
+  ac:	2f 98       	cbi	0x05, 7	; 5
 		PORTB &= ~(1<<PORTB1); //clear middle LED
-  b0:	29 98       	cbi	0x05, 1	; 5
-  b2:	20 e0       	ldi	r18, 0x00	; 0
-  b4:	30 e0       	ldi	r19, 0x00	; 0
-  b6:	0a c0       	rjmp	.+20     	; 0xcc <main+0x4c>
-    milliseconds can be achieved.
- */
-void
-_delay_loop_2(uint16_t __count)
-{
-	__asm__ volatile (
-  b8:	fa 01       	movw	r30, r20
-  ba:	31 97       	sbiw	r30, 0x01	; 1
-  bc:	f1 f7       	brne	.-4      	; 0xba <main+0x3a>
+  ae:	29 98       	cbi	0x05, 1	; 5
+  b0:	20 e0       	ldi	r18, 0x00	; 0
+  b2:	30 e0       	ldi	r19, 0x00	; 0
+  b4:	0a c0       	rjmp	.+20     	; 0xca <main+0x4a>
+  b6:	fa 01       	movw	r30, r20
+  b8:	31 97       	sbiw	r30, 0x01	; 1
+  ba:	f1 f7       	brne	.-4      	; 0xb8 <main+0x38>
 		__ticks = (uint16_t) (__ms * 10.0);
 		while(__ticks)
 		{
 			// wait 1/10 ms
 			_delay_loop_2(((F_CPU) / 4e3) / 10);
 			__ticks --;
-  be:	01 97       	sbiw	r24, 0x01	; 1
+  bc:	01 97       	sbiw	r24, 0x01	; 1
 		__ticks = 1;
 	else if (__tmp > 65535)
 	{
 		//	__ticks = requested delay in 1/10 ms
 		__ticks = (uint16_t) (__ms * 10.0);
 		while(__ticks)
-  c0:	d9 f7       	brne	.-10     	; 0xb8 <main+0x38>
+  be:	d9 f7       	brne	.-10     	; 0xb6 <main+0x36>
 		ii = 0;
-		while (ii<10) {
+		while (ii<5) {
 			_delay_ms(100);//delay 1s
 			ii++;
-  c2:	2f 5f       	subi	r18, 0xFF	; 255
-  c4:	3f 4f       	sbci	r19, 0xFF	; 255
-		_delay_us(80);//leave on for 80us
+  c0:	2f 5f       	subi	r18, 0xFF	; 255
+  c2:	3f 4f       	sbci	r19, 0xFF	; 255
+		_delay_us(120);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB &= ~(1<<PORTB1); //clear middle LED
 		ii = 0;
-		while (ii<10) {
-  c6:	2a 30       	cpi	r18, 0x0A	; 10
-  c8:	31 05       	cpc	r19, r1
-  ca:	19 f0       	breq	.+6      	; 0xd2 <main+0x52>
-  cc:	88 ee       	ldi	r24, 0xE8	; 232
-  ce:	93 e0       	ldi	r25, 0x03	; 3
-  d0:	f3 cf       	rjmp	.-26     	; 0xb8 <main+0x38>
+		while (ii<5) {
+  c4:	25 30       	cpi	r18, 0x05	; 5
+  c6:	31 05       	cpc	r19, r1
+  c8:	19 f0       	breq	.+6      	; 0xd0 <main+0x50>
+  ca:	88 ee       	ldi	r24, 0xE8	; 232
+  cc:	93 e0       	ldi	r25, 0x03	; 3
+  ce:	f3 cf       	rjmp	.-26     	; 0xb6 <main+0x36>
 			_delay_ms(100);//delay 1s
 			ii++;
 		}		
 		
 		//switch E.P.M. direction 2
 		PORTB |= (1<<PORTB2); // clear outer LED
-  d2:	2a 9a       	sbi	0x05, 2	; 5
+  d0:	2a 9a       	sbi	0x05, 2	; 5
 		PORTB |= (1<<7);//activate E.P.M direction 2
-  d4:	2f 9a       	sbi	0x05, 7	; 5
-  d6:	cb 01       	movw	r24, r22
-  d8:	01 97       	sbiw	r24, 0x01	; 1
-  da:	f1 f7       	brne	.-4      	; 0xd8 <main+0x58>
-    can be achieved.
-*/
-void
-_delay_loop_1(uint8_t __count)
-{
-	__asm__ volatile (
-  dc:	8a 2f       	mov	r24, r26
-  de:	8a 95       	dec	r24
-  e0:	f1 f7       	brne	.-4      	; 0xde <main+0x5e>
-		_delay_us(240);//leave on for 80us
-		_delay_us(80);
+  d2:	2f 9a       	sbi	0x05, 7	; 5
+  d4:	cb 01       	movw	r24, r22
+  d6:	01 97       	sbiw	r24, 0x01	; 1
+  d8:	f1 f7       	brne	.-4      	; 0xd6 <main+0x56>
+		_delay_us(120);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
-  e2:	2e 98       	cbi	0x05, 6	; 5
+  da:	2e 98       	cbi	0x05, 6	; 5
 		PORTB &=~(1<<7);//deactivate E.P.M
-  e4:	2f 98       	cbi	0x05, 7	; 5
+  dc:	2f 98       	cbi	0x05, 7	; 5
 		PORTB &= ~(1<<PORTB2); // set outer LED
-  e6:	2a 98       	cbi	0x05, 2	; 5
-  e8:	20 e0       	ldi	r18, 0x00	; 0
-  ea:	30 e0       	ldi	r19, 0x00	; 0
-  ec:	0a c0       	rjmp	.+20     	; 0x102 <main+0x82>
-    milliseconds can be achieved.
- */
-void
-_delay_loop_2(uint16_t __count)
-{
-	__asm__ volatile (
-  ee:	fa 01       	movw	r30, r20
-  f0:	31 97       	sbiw	r30, 0x01	; 1
-  f2:	f1 f7       	brne	.-4      	; 0xf0 <main+0x70>
+  de:	2a 98       	cbi	0x05, 2	; 5
+  e0:	20 e0       	ldi	r18, 0x00	; 0
+  e2:	30 e0       	ldi	r19, 0x00	; 0
+  e4:	0a c0       	rjmp	.+20     	; 0xfa <main+0x7a>
+  e6:	fa 01       	movw	r30, r20
+  e8:	31 97       	sbiw	r30, 0x01	; 1
+  ea:	f1 f7       	brne	.-4      	; 0xe8 <main+0x68>
 		{
 			// wait 1/10 ms
 			_delay_loop_2(((F_CPU) / 4e3) / 10);
 			__ticks --;
-  f4:	01 97       	sbiw	r24, 0x01	; 1
+  ec:	01 97       	sbiw	r24, 0x01	; 1
 		__ticks = 1;
 	else if (__tmp > 65535)
 	{
 		//	__ticks = requested delay in 1/10 ms
 		__ticks = (uint16_t) (__ms * 10.0);
 		while(__ticks)
-  f6:	d9 f7       	brne	.-10     	; 0xee <main+0x6e>
+  ee:	d9 f7       	brne	.-10     	; 0xe6 <main+0x66>
 		ii = 0;
-		while (ii<10) {
+		while (ii<5) {
 			_delay_ms(100);//delay 1s
 			ii++;
-  f8:	2f 5f       	subi	r18, 0xFF	; 255
-  fa:	3f 4f       	sbci	r19, 0xFF	; 255
-		_delay_us(80);
+  f0:	2f 5f       	subi	r18, 0xFF	; 255
+  f2:	3f 4f       	sbci	r19, 0xFF	; 255
+		_delay_us(120);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB &= ~(1<<PORTB2); // set outer LED
 		ii = 0;
-		while (ii<10) {
-  fc:	2a 30       	cpi	r18, 0x0A	; 10
-  fe:	31 05       	cpc	r19, r1
- 100:	81 f2       	breq	.-96     	; 0xa2 <main+0x22>
- 102:	88 ee       	ldi	r24, 0xE8	; 232
- 104:	93 e0       	ldi	r25, 0x03	; 3
- 106:	f3 cf       	rjmp	.-26     	; 0xee <main+0x6e>
+		while (ii<5) {
+  f4:	25 30       	cpi	r18, 0x05	; 5
+  f6:	31 05       	cpc	r19, r1
+  f8:	99 f2       	breq	.-90     	; 0xa0 <main+0x20>
+  fa:	88 ee       	ldi	r24, 0xE8	; 232
+  fc:	93 e0       	ldi	r25, 0x03	; 3
+  fe:	f3 cf       	rjmp	.-26     	; 0xe6 <main+0x66>
 
-00000108 <_exit>:
- 108:	f8 94       	cli
+00000100 <_exit>:
+ 100:	f8 94       	cli
 
-0000010a <__stop_program>:
- 10a:	ff cf       	rjmp	.-2      	; 0x10a <__stop_program>
+00000102 <__stop_program>:
+ 102:	ff cf       	rjmp	.-2      	; 0x102 <__stop_program>
