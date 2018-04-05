@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 <AVRWorkspace><IOSettings><CurrentRegisters/></IOSettings><part name="ATMEGA328P"/><Files/></AVRWorkspace>
+=======
+<AVRWorkspace><IOSettings><CurrentRegisters/></IOSettings><part name="ATMEGA328P"/><Files><File00000 Name="C:\Users\salou\Documents\GitHub\Thesis_Code\V4\IMUtest\IRComms.c" Position="11 108 1379 577" LineCol="153 5"/></Files></AVRWorkspace>
+>>>>>>> parent of d902b6b... last changes

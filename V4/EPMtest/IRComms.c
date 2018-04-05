@@ -70,12 +70,12 @@ int main(void) {
 		//switch E.P.M. direction 1 
 		PORTB |= (1<<PORTB1); // set middle LED
 		PORTB |= (1<<6);//activate E.P.M direction 1
-		_delay_us(120);//leave on for 80us
+		_delay_us(80);//leave on for 80us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB &= ~(1<<PORTB1); //clear middle LED
 		ii = 0;
-		while (ii<5) {
+		while (ii<10) {
 			_delay_ms(100);//delay 1s
 			ii++;
 		}		
@@ -83,16 +83,37 @@ int main(void) {
 		//switch E.P.M. direction 2
 		PORTB |= (1<<PORTB2); // clear outer LED
 		PORTB |= (1<<7);//activate E.P.M direction 2
-		_delay_us(120);//leave on for 80us
+		_delay_us(240);//leave on for 80us
+		_delay_us(80);
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB &= ~(1<<PORTB2); // set outer LED
 		ii = 0;
-		while (ii<5) {
+		while (ii<10) {
 			_delay_ms(100);//delay 1s
 			ii++;
 		}
 
+		
+		//PORTB |= (1<<PORTB1);
+		//PORTB |= (1<<PORTB2);
+		//PORTC |= (1<<PORTC3);
+		
+		/* while(ii<10) {
+			_delay_ms(30);
+			ii++;
+		}
+		ii=0;
+
+		//PORTB &= ~(1<<PORTB1);
+		PORTB &= ~(1<<PORTB2);
+		PORTC &= ~(1<<PORTC3);
+
+		while(ii<10) {
+			_delay_ms(30);
+			ii++;
+		}
+		ii=0; */
 	}
 
 }

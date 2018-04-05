@@ -124,7 +124,7 @@ int main(void) {
 
 		// turn on LEDs based on heading position
 
-		PORTB |= (1<<PORTB0);
+		/* PORTB |= (1<<PORTB0);
 
 		whoAmI(); // test comms
 
@@ -134,12 +134,12 @@ int main(void) {
 		while(ii<3) {
 			_delay_ms(100); // delay to keep loop from running too quickly
 			ii++;
-		}
+		} */
 
 
 		// loop through all i2c addresses to see if the IMU is active
 
-		/*char ii=0;
+		char ii=0;
 
 		while (ii<128) {
 			char test = 0;
@@ -157,15 +157,15 @@ int main(void) {
 			i2c_stop();
 			ii++;
 
-			int jj=0;
+			/*int jj=0;
 			while(ii<3) {
 				_delay_ms(100); // delay to keep loop from running too quickly
 				ii++;
-			}
+			}*/
 			_delay_ms(100);
 			
 
-		} */
+		}
 
 
 	}
@@ -198,10 +198,10 @@ void whoAmI(void) {
 	char test3=0;
 
 	test = i2c_start(LSM9DS1_WRITE);
-	//if (test==2) { PORTB |= (1<<PORTB2); }
+	if (test==2) { PORTB |= (1<<PORTB2); }
 		
 	test2 = i2c_write(WHO_AM_I_REG);
-	//if (test2==1) { PORTB |= (1<<PORTB1); }
+	if (test2==1) { PORTB |= (1<<PORTB1); }
 
 	test3 = i2c_start(LSM9DS1_READ);
 	//if (test3==1) { PORTB |= (1<<PORTB1); }
@@ -209,13 +209,13 @@ void whoAmI(void) {
 	who = i2c_read_nack();
 	i2c_stop();
 
-	if (who == 0x68) { // who am I register value (0x68)
-		PORTB |= (1<<PORTB2);
+	/* if (who == 0x68) { // who am I register value (0x68)
+		PORTB |= (1<<PORTB1);
 	} else if (who == 0x00) {
 		PORTB |= (1<<PORTB1);
 	} else {
 		PORTB |= (1<<PORTB1);
-	}
+	} */
 	//PORTB |= (1<<PORTB2);
 
 	_delay_ms(200);
