@@ -1,5 +1,5 @@
 #define F_CPU 8000000UL
-//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:IRComms.hex -F
+//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:EPMtest.hex -F
 //write fuses: -U lfuse:w:0xE2:m -F
 
 #include <avr/io.h>

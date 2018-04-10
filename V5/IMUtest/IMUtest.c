@@ -1,5 +1,5 @@
 #define F_CPU 8000000UL
-//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:IRComms.hex -F
+//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:IMUtest.hex -F
 //write fuses: -U lfuse:w:0xE2:m -F
 
 #include <avr/io.h>
@@ -104,7 +104,7 @@ int main(void) {
 
 	i2c_init();
 	
-	//imu_init();
+	imu_init();
 
 	PORTB |= (1<<PORTB0); // turn on one LED for imu init success
 
@@ -124,22 +124,22 @@ int main(void) {
 
 		// turn on LEDs based on heading position
 
-		/* PORTB |= (1<<PORTB0);
+		PORTB |= (1<<PORTB0);
 
 		whoAmI(); // test comms
 
 		PORTB &= ~(1<<PORTB0);
 
 		int ii=0;
-		while(ii<3) {
+		while(ii<10) {
 			_delay_ms(100); // delay to keep loop from running too quickly
 			ii++;
-		} */
+		}
 
 
 		// loop through all i2c addresses to see if the IMU is active
 
-		char ii=0;
+		/*char ii=0;
 
 		while (ii<128) {
 			char test = 0;
@@ -157,15 +157,15 @@ int main(void) {
 			i2c_stop();
 			ii++;
 
-			/*int jj=0;
+			int jj=0;
 			while(ii<3) {
 				_delay_ms(100); // delay to keep loop from running too quickly
 				ii++;
-			}*/
+			}
 			_delay_ms(100);
 			
 
-		}
+		} */
 
 
 	}
@@ -176,14 +176,16 @@ int main(void) {
 void imu_init(void) {
 	
 	// set gyro control registers
-	//i2c_writeReg(LSM9DS1_WRITE, CTRL_REG1_G, &gyro_ctrl_reg, 3);
+	i2c_writeReg(LSM9DS1_WRITE, CTRL_REG1_G, &gyro_ctrl_reg, 3);
 
 	// set accel control registers
-	//i2c_writeReg(LSM9DS1_WRITE, CTRL_REG4, &xl_ctrl_reg, 7);
+	i2c_writeReg(LSM9DS1_WRITE, CTRL_REG4, &xl_ctrl_reg, 7);
 
 	// any other registers to set up
 
 }
+
+// TODO: fn for reading relevant gyro axis, make it an interrupt to integrate the dps to a position? store current position in a global variable?
 
 void whoAmI(void) {
 	
@@ -197,25 +199,25 @@ void whoAmI(void) {
 	char test2=0;
 	char test3=0;
 
-	test = i2c_start(LSM9DS1_WRITE);
-	if (test==2) { PORTB |= (1<<PORTB2); }
+	i2c_start(LSM9DS1_WRITE);
+	//if (test==2) { PORTB |= (1<<PORTB2); }
 		
-	test2 = i2c_write(WHO_AM_I_REG);
-	if (test2==1) { PORTB |= (1<<PORTB1); }
+	i2c_write(WHO_AM_I_REG);
+	//if (test2==1) { PORTB |= (1<<PORTB1); }
 
-	test3 = i2c_start(LSM9DS1_READ);
+	i2c_start(LSM9DS1_READ);
 	//if (test3==1) { PORTB |= (1<<PORTB1); }
 	
 	who = i2c_read_nack();
 	i2c_stop();
 
-	/* if (who == 0x68) { // who am I register value (0x68)
+	if (who == 0x68) { // who am I register value (0x68)
 		PORTB |= (1<<PORTB1);
 	} else if (who == 0x00) {
 		PORTB |= (1<<PORTB1);
 	} else {
-		PORTB |= (1<<PORTB1);
-	} */
+		PORTB |= (1<<PORTB2);
+	} 
 	//PORTB |= (1<<PORTB2);
 
 	_delay_ms(200);
