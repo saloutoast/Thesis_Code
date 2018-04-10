@@ -13,8 +13,8 @@
 #include "i2c_master.h"
 
 // adresses of accel/gyro in IMU
-#define LSM9DS1_WRITE  0xD4
-#define LSM9DS1_READ   0xD5
+#define LSM9DS1_WRITE  0x38 //0xD4
+#define LSM9DS1_READ   0x39 //0xD5
 
 // register addresses here
 #define WHO_AM_I_REG   0x0F
@@ -64,10 +64,10 @@ int get_gz(void);
 /* int get_ax(void);
 int get_ay(void); */
 
-static char gyro_ctrl_reg[4] = {0b01111000, 0b00000000, 0b00000000, 0b00001000}; 
+char gyro_ctrl_reg[4] = {0b01111000, 0b00000000, 0b00000000, 0b00001000}; 
 // 119Hz ODR, 2000dps, 14Hz cutoff; no filtering enabled; change sign of z-axis
 
-static char xl_ctrl_reg[7] = {0b00111000, 0b00111000, 0b01010000, 0b00000000, 0b00000100, 0b00000000, 0b00000000};
+char xl_ctrl_reg[7] = {0b00111000, 0b00111000, 0b01010000, 0b00000000, 0b00000100, 0b00000000, 0b00000000};
 // all 3 gyro axes enabled; all 3 xl axes enabled; 50Hz ODR, +-4g, no bandwidth filter;
 // no high resolution mode, no filtering; adress incrementation enabled; i2c enabled, FIFO disabled; no self-test
 
@@ -105,7 +105,7 @@ int main(void) {
 
 	i2c_init();
 	
-	imu_init();
+	//imu_init();
 
 	PORTB |= (1<<PORTB0); // turn on one LED for imu init success
 
@@ -118,13 +118,14 @@ int main(void) {
 	while(1) {
 		// loop
 		
+		/*
 		// gyro test
 		// read gyroscope (time the reading operation to get accurate position)
 		omega = get_gz();
 		_delay_ms(25);
 
 		// integrate theta (position)
-		theta+= (omega*4); // scaled to hundredths of a second
+		theta+= (omega*3); // scaled to hundredths of a second
 
 		// turn on LEDs based on heading position
 		if (theta >= 34000) {
@@ -132,36 +133,63 @@ int main(void) {
 		} else if (theta >= 36000) {
 			PORTB &= (1<<PORTB2);
 			theta = 0;
-		}
+		} */
 
 		
 		// who am I test
-		/*PORTB |= (1<<PORTB0);
+		PORTB |= (1<<PORTB0);
 
 		whoAmI(); // test comms
 
 		PORTB &= ~(1<<PORTB0);
 
 		int ii=0;
-		while(ii<10) {
+		while(ii<3) {
 			_delay_ms(100); // delay to keep loop from running too quickly
 			ii++;
-		} */
+		}
 
 
 		// loop through all i2c addresses to see if the IMU is active
-		/*char ii=0;
+		/* char ii=0;
 
-		while (ii<128) {
+		while (ii<127) {
 			char test = 0;
 			
 			test = i2c_start((ii<<1));
 			if(test==0) {
-				while(1) {
-					PORTB |= (1<<PORTB2);
-					_delay_ms(ii);
-					PORTB &= ~(1<<PORTB2);
-					_delay_ms(ii);
+				PORTB &= ~(1<<PORTB0);
+				if (ii==26) {
+					while(1) {
+						PORTB |= (1<<PORTB2);
+						_delay_ms(ii);
+						PORTB &= ~(1<<PORTB2);
+						_delay_ms(ii);
+					}
+				} else if (ii==27) {
+					while(1) {
+						PORTB |= (1<<PORTB1);
+						_delay_ms(ii);
+						PORTB &= ~(1<<PORTB1);
+						_delay_ms(ii);
+					}
+				} else if (ii==28) {
+					while(1) {
+						PORTB |= (1<<PORTB0);
+						_delay_ms(ii);
+						PORTB &= ~(1<<PORTB0);
+						_delay_ms(ii);
+					}
+				} else {
+					while(1) {
+						PORTB |= (1<<PORTB0);
+						PORTB |= (1<<PORTB1);
+						_delay_ms(ii);
+						PORTB &= ~(1<<PORTB0);
+						PORTB &= ~(1<<PORTB1);
+						_delay_ms(ii);
+					}
+
 				}
 			}
 			
@@ -169,14 +197,15 @@ int main(void) {
 			ii++;
 
 			int jj=0;
-			while(ii<3) {
+			while(jj<3) {
 				_delay_ms(100); // delay to keep loop from running too quickly
-				ii++;
+				jj++;
 			}
 			_delay_ms(100);
 			
-
 		} */
+
+		//PORTB |= (1<<PORTB1);
 
 
 	}
@@ -187,10 +216,10 @@ int main(void) {
 void imu_init(void) {
 	
 	// set gyro control registers
-	i2c_writeReg(LSM9DS1_WRITE, CTRL_REG1_G, &gyro_ctrl_reg, 4);
+	i2c_writeReg(LSM9DS1_WRITE, CTRL_REG1_G, gyro_ctrl_reg, 4);
 
 	// set accel control registers
-	i2c_writeReg(LSM9DS1_WRITE, CTRL_REG4, &xl_ctrl_reg, 7);
+	i2c_writeReg(LSM9DS1_WRITE, CTRL_REG4, xl_ctrl_reg, 7);
 
 	// any other registers to set up?
 
@@ -206,11 +235,11 @@ int get_gz(void) {
 	i2c_readReg(LSM9DS1_WRITE, STATUS_REG1, &check, 1);
 
 	if (check | 0x02) { // if new gyro data is available
-		i2c_readReg(LSM9DS1_WRITE, OUT_Z_L_G, &temp, 2); // get both registers
+		i2c_readReg(LSM9DS1_WRITE, OUT_Z_L_G, temp, 2); // get both registers
 		gz = (temp[1]<<8) | temp[0]; // shift and store values
 	}
 	
-	return gz
+	return gz;
 }
 
 
@@ -218,10 +247,11 @@ void whoAmI(void) {
 	
 	//PORTB |= (1<<PORTB2);	// turn on LED to signal transmission
 	char who = 0; // stored rcvd value here
+	char test = 0;
 	
-	//i2c_readReg(LSM9DS1_WRITE, WHO_AM_I_REG, &who, 1); //also could be used
+	test = i2c_readReg(LSM9DS1_WRITE, WHO_AM_I_REG, &who, 1); //also could be used
 	
-	char test=0; // error checking variables
+	/*char test=0; // error checking variables
 	char test2=0;
 	char test3=0;
 
@@ -235,14 +265,16 @@ void whoAmI(void) {
 	//if (test3==1) { PORTB |= (1<<PORTB1); }
 	
 	who = i2c_read_nack();
-	i2c_stop();
+	i2c_stop(); */
+	if (test == 2) { PORTB |= (1<<PORTB2); }
+
 
 	if (who == 0x68) { // who am I register value (0x68)
-		PORTB |= (1<<PORTB1);
-	} else if (who == 0x00) {
+		PORTB |= (1<<PORTB2);
+	} else if (who == 0x3D) {
 		PORTB |= (1<<PORTB1);
 	} else {
-		PORTB |= (1<<PORTB2);
+		//PORTB |= (1<<PORTB2);
 	} 
 	//PORTB |= (1<<PORTB2);
 

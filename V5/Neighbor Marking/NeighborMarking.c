@@ -22,7 +22,6 @@ static volatile char toSend = 0xAB; // message variables/IDs: 0x83, 0x85, 0x87
 static volatile char toRcv1 = 0xDB;
 static volatile char toRcv2 = 0xA5;
 
-
 static volatile int rcv_time = 0; // neighbor marking variables
 static volatile int near = 0;
 static volatile int far = 0;
@@ -78,6 +77,8 @@ int main(void) {
 	
 	sei(); // enable interrupts	
 
+	// TODO: tuning period for angular speed? or use gyro?
+
 	int cur_time = 0;
 
 	// at 140 rpm, period should be about 3344 timer1 counts
@@ -87,14 +88,8 @@ int main(void) {
 	far = 3*near;
 
 
-	// array for neighbor IDs and angles
-	char array_test[5][3];
-
-	int mm=0;
-	while(mm<5) {
-		array_test[mm][2] = 1;
-		mm+=1;
-	}
+	// array for neighbor IDs and headings
+	char neighbors[5][3];
 
 	while(1) {
 		//neighbor marking based on times of messages received, use Timer1
@@ -107,10 +102,17 @@ int main(void) {
 		//		if existing neighbor -> update heading value (angle? time? speed? something)
 		//		if new neighbor -> add to table with heading value
 
-		// check current heading (integrate?)
+		// check current heading (integrate?) (use Timer1 as an approximation)
 		// look through table comlumn, blink LEDs (unique combinations?) at headings of neighbors
 
 		// send ID message again
+
+
+		if (rcv_sx ==1) {
+
+			
+
+		}
 		
 		/////////////////////////////////
 
@@ -130,6 +132,8 @@ int main(void) {
 	}
 
 }
+
+// TODO: ISR to integrate position data from IMU?
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 

@@ -116,7 +116,7 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
 .rela.plt
  *(.rela.plt)
 
-.text           0x00000000      0x3cc
+.text           0x00000000      0x428
  *(.vectors)
  .vectors       0x00000000       0x68 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm328p.o
                 0x00000000                __vectors
@@ -196,32 +196,33 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x00000092                __vector_16
                 0x00000092                __vector_18
                 0x00000092                __vector_20
- .text          0x00000096       0xdc IMUtest.o
-                0x000000dc                imu_init
+ .text          0x00000096      0x130 IMUtest.o
+                0x00000134                imu_init
                 0x00000096                whoAmI
-                0x000000fe                main
- .text          0x00000172      0x256 i2c_master.o
-                0x000001c0                i2c_write
-                0x000001f8                i2c_read_nack
-                0x000001e4                i2c_read_ack
-                0x0000032e                i2c_readReg
-                0x0000025c                i2c_receive
-                0x0000017a                i2c_start
-                0x0000020c                i2c_transmit
-                0x000003c0                i2c_stop
-                0x00000172                i2c_init
-                0x000002d2                i2c_writeReg
- .text          0x000003c8        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
- .text          0x000003c8        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
-                0x000003c8                . = ALIGN (0x2)
+                0x00000156                main
+                0x000000e8                get_gz
+ .text          0x000001c6      0x25e i2c_master.o
+                0x00000218                i2c_write
+                0x00000250                i2c_read_nack
+                0x0000023c                i2c_read_ack
+                0x00000386                i2c_readReg
+                0x000002b4                i2c_receive
+                0x000001ce                i2c_start
+                0x00000264                i2c_transmit
+                0x0000041c                i2c_stop
+                0x000001c6                i2c_init
+                0x0000032a                i2c_writeReg
+ .text          0x00000424        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .text          0x00000424        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
+                0x00000424                . = ALIGN (0x2)
  *(.text.*)
- .text.libgcc   0x000003c8        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
- .text.libgcc   0x000003c8        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
-                0x000003c8                . = ALIGN (0x2)
+ .text.libgcc   0x00000424        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .text.libgcc   0x00000424        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
+                0x00000424                . = ALIGN (0x2)
  *(.fini9)
- .fini9         0x000003c8        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
-                0x000003c8                exit
-                0x000003c8                _exit
+ .fini9         0x00000424        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+                0x00000424                exit
+                0x00000424                _exit
  *(.fini9)
  *(.fini8)
  *(.fini8)
@@ -240,46 +241,49 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
  *(.fini1)
  *(.fini1)
  *(.fini0)
- .fini0         0x000003c8        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .fini0         0x00000424        0x4 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
  *(.fini0)
-                0x000003cc                _etext = .
+                0x00000428                _etext = .
 
-.data           0x00800100        0xa load address 0x000003cc
+.data           0x00800100        0xc load address 0x00000428
                 0x00800100                PROVIDE (__data_start, .)
  *(.data)
  .data          0x00800100        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm328p.o
- .data          0x00800100        0xa IMUtest.o
- .data          0x0080010a        0x0 i2c_master.o
- .data          0x0080010a        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
- .data          0x0080010a        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
+ .data          0x00800100        0xb IMUtest.o
+                0x00800100                gyro_ctrl_reg
+                0x00800104                xl_ctrl_reg
+ .data          0x0080010b        0x0 i2c_master.o
+ .data          0x0080010b        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .data          0x0080010b        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
  *(.data*)
  *(.rodata)
  *(.rodata*)
  *(.gnu.linkonce.d*)
-                0x0080010a                . = ALIGN (0x2)
-                0x0080010a                _edata = .
-                0x0080010a                PROVIDE (__data_end, .)
+                0x0080010c                . = ALIGN (0x2)
+ *fill*         0x0080010b        0x1 00
+                0x0080010c                _edata = .
+                0x0080010c                PROVIDE (__data_end, .)
 
-.bss            0x0080010a        0x0
-                0x0080010a                PROVIDE (__bss_start, .)
+.bss            0x0080010c        0x0
+                0x0080010c                PROVIDE (__bss_start, .)
  *(.bss)
- .bss           0x0080010a        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm328p.o
- .bss           0x0080010a        0x0 IMUtest.o
- .bss           0x0080010a        0x0 i2c_master.o
- .bss           0x0080010a        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
- .bss           0x0080010a        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
+ .bss           0x0080010c        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/../../../../avr/lib/avr5/crtm328p.o
+ .bss           0x0080010c        0x0 IMUtest.o
+ .bss           0x0080010c        0x0 i2c_master.o
+ .bss           0x0080010c        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_exit.o)
+ .bss           0x0080010c        0x0 c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a(_copy_data.o)
  *(.bss*)
  *(COMMON)
-                0x0080010a                PROVIDE (__bss_end, .)
-                0x000003cc                __data_load_start = LOADADDR (.data)
-                0x000003d6                __data_load_end = (__data_load_start + SIZEOF (.data))
+                0x0080010c                PROVIDE (__bss_end, .)
+                0x00000428                __data_load_start = LOADADDR (.data)
+                0x00000434                __data_load_end = (__data_load_start + SIZEOF (.data))
 
-.noinit         0x0080010a        0x0
-                0x0080010a                PROVIDE (__noinit_start, .)
+.noinit         0x0080010c        0x0
+                0x0080010c                PROVIDE (__noinit_start, .)
  *(.noinit*)
-                0x0080010a                PROVIDE (__noinit_end, .)
-                0x0080010a                _end = .
-                0x0080010a                PROVIDE (__heap_start, .)
+                0x0080010c                PROVIDE (__noinit_end, .)
+                0x0080010c                _end = .
+                0x0080010c                PROVIDE (__heap_start, .)
 
 .eeprom         0x00810000        0x0
  *(.eeprom*)
@@ -338,45 +342,45 @@ LOAD c:/winavr-20100110/bin/../lib/gcc/avr/4.3.3/avr5\libgcc.a
                 0x00000020       0x20 i2c_master.o
 
 .debug_pubnames
-                0x00000000       0xe0
+                0x00000000      0x10d
  *(.debug_pubnames)
  .debug_pubnames
-                0x00000000       0x33 IMUtest.o
+                0x00000000       0x60 IMUtest.o
  .debug_pubnames
-                0x00000033       0xad i2c_master.o
+                0x00000060       0xad i2c_master.o
 
-.debug_info     0x00000000      0x5d1
+.debug_info     0x00000000      0x629
  *(.debug_info)
- .debug_info    0x00000000      0x268 IMUtest.o
- .debug_info    0x00000268      0x369 i2c_master.o
+ .debug_info    0x00000000      0x2bd IMUtest.o
+ .debug_info    0x000002bd      0x36c i2c_master.o
  *(.gnu.linkonce.wi.*)
 
-.debug_abbrev   0x00000000      0x23c
+.debug_abbrev   0x00000000      0x278
  *(.debug_abbrev)
- .debug_abbrev  0x00000000      0x154 IMUtest.o
- .debug_abbrev  0x00000154       0xe8 i2c_master.o
+ .debug_abbrev  0x00000000      0x190 IMUtest.o
+ .debug_abbrev  0x00000190       0xe8 i2c_master.o
 
-.debug_line     0x00000000      0x589
+.debug_line     0x00000000      0x59e
  *(.debug_line)
- .debug_line    0x00000000      0x2b9 IMUtest.o
- .debug_line    0x000002b9      0x2d0 i2c_master.o
+ .debug_line    0x00000000      0x2ce IMUtest.o
+ .debug_line    0x000002ce      0x2d0 i2c_master.o
 
-.debug_frame    0x00000000       0xf0
+.debug_frame    0x00000000      0x100
  *(.debug_frame)
- .debug_frame   0x00000000       0x40 IMUtest.o
- .debug_frame   0x00000040       0xb0 i2c_master.o
+ .debug_frame   0x00000000       0x50 IMUtest.o
+ .debug_frame   0x00000050       0xb0 i2c_master.o
 
-.debug_str      0x00000000      0x1ba
+.debug_str      0x00000000      0x1cc
  *(.debug_str)
- .debug_str     0x00000000      0x10e IMUtest.o
-                                0x147 (size before relaxing)
- .debug_str     0x0000010e       0xac i2c_master.o
+ .debug_str     0x00000000      0x120 IMUtest.o
+                                0x159 (size before relaxing)
+ .debug_str     0x00000120       0xac i2c_master.o
                                 0x163 (size before relaxing)
 
-.debug_loc      0x00000000      0x335
+.debug_loc      0x00000000      0x2fa
  *(.debug_loc)
- .debug_loc     0x00000000       0xbb IMUtest.o
- .debug_loc     0x000000bb      0x27a i2c_master.o
+ .debug_loc     0x00000000       0xa8 IMUtest.o
+ .debug_loc     0x000000a8      0x252 i2c_master.o
 
 .debug_macinfo
  *(.debug_macinfo)

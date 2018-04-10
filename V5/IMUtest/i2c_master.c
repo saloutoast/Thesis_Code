@@ -19,7 +19,7 @@ void i2c_init(void)
 char i2c_start(char address)
 {
 	// reset TWI control register
-	//TWCR = 0;
+	TWCR = 0;
 	// transmit START condition 
 	TWCR = (1<<TWINT) | (1<<TWSTA) | (1<<TWEN);
 	// wait for end of transmission
@@ -130,7 +130,7 @@ char i2c_readReg(char devaddr, char regaddr, char* data, int length)
 
 	i2c_write(regaddr);
 
-	if (i2c_start(devaddr | 0x01)) { return 1; }
+	if (i2c_start(devaddr | 0x01)) { return 2; }
 
 	for (int i = 0; i < (length-1); i++)
 	{
