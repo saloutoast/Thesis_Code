@@ -266,7 +266,7 @@ void whoAmI(void) {
 	
 	who = i2c_read_nack();
 	i2c_stop(); */
-	if (test == 2) { PORTB |= (1<<PORTB2); }
+	if (test == 1) { PORTB |= (1<<PORTB2); }
 
 
 	if (who == 0x68) { // who am I register value (0x68)

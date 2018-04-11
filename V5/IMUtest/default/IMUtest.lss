@@ -118,8 +118,8 @@ void whoAmI(void) {
 	
 	who = i2c_read_nack();
 	i2c_stop(); */
-	if (test == 2) { PORTB |= (1<<PORTB2); }
-  b4:	82 30       	cpi	r24, 0x02	; 2
+	if (test == 1) { PORTB |= (1<<PORTB2); }
+  b4:	81 30       	cpi	r24, 0x01	; 1
   b6:	09 f4       	brne	.+2      	; 0xba <whoAmI+0x24>
   b8:	2a 9a       	sbi	0x05, 2	; 5
 
