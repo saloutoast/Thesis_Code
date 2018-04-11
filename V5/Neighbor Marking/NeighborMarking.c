@@ -77,7 +77,26 @@ int main(void) {
 	
 	sei(); // enable interrupts	
 
-	// TODO: tuning period for angular speed? or use gyro?
+
+
+	// tuning period to start spinning robot and tune speed of table to 180rpm
+	int ww = 0;
+	while (ww<45) { // tune for 15 seconds
+		_delay_ms(300);
+		PORTB |= (1<<PORTB2); // turn on LED once per rotation
+		_delay_ms(33);
+		PORTB &= ~(1<<PORTB2);
+		ww+=1;
+	}
+	PORTB |= (1<<PORTB0); // green
+	_delay_ms(500);
+	PORTB &= ~(1<<PORTB0); // speed tuning should be complete at this point
+
+	// array for neighbor IDs and headings
+	char neighbors[5][3];
+
+
+
 
 	int cur_time = 0;
 
@@ -87,10 +106,6 @@ int main(void) {
 	near = 836; // initial guess
 	far = 3*near;
 
-
-	// array for neighbor IDs and headings
-	char neighbors[5][3];
-
 	while(1) {
 		//neighbor marking based on times of messages received, use Timer1
 
@@ -99,24 +114,18 @@ int main(void) {
 		
 		// if new message...
 		// 	 check neighbor table
-		//		if existing neighbor -> update heading value (angle? time? speed? something)
+		//		if first neighbor or pillar -> use for rotation timing and relative headings (should know rotation speed)
+		//		if existing neighbor -> update heading value (angle? time?)
 		//		if new neighbor -> add to table with heading value
 
-		// check current heading (integrate?) (use Timer1 as an approximation)
-		// look through table comlumn, blink LEDs (unique combinations?) at headings of neighbors
+		// check current heading (use Timer1 as an approximation)
+		// look through table comlumn, blink LEDs (unique combinations?) at correct headings of neighbors
 
 		// send ID message again
-
-
-		if (rcv_sx ==1) {
-
-			
-
-		}
 		
 		/////////////////////////////////
 
-		// two robots, based on timing, not 
+		// two robots, based on timing
 		if (rcv_sx==1) { // got a new message
 
 			// if the LEDs are in line with the other module
@@ -132,8 +141,6 @@ int main(void) {
 	}
 
 }
-
-// TODO: ISR to integrate position data from IMU?
 
 ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
@@ -159,7 +166,6 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 			//PORTB &= ~(1<<PORTB0);
 
 		} else { // on subsequent rising edges
-			// TODO: add LED debugging for each bit
 			//PORTB |= (1<<PORTB0);
 
 			// match rising edges to closest expected time in rcvd
@@ -193,7 +199,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
 
 				TCNT1 = 0; // reset timer1 on received messages 
-				// TODO: more robust, able to handle multiple neighbors...only reset on first neighbor in table?
+				// TODO: more robust, able to handle multiple neighbors...only reset on first neighbor in table
 				rcv_time = 0;
 
 				rcving = 0; // reset receiving variables
@@ -258,8 +264,7 @@ ISR(TIMER0_COMPA_vect) { // timer0 interrupt routine
 
 }
 
-// TODO: function for getting heading? speed? probably want to disable interrupts during I2C comms
-
+// TODO: routine to send messages, especially if messages end up containing more than just static IDs
 /* void send_msg(char msg) { // timing values/delays are calibrated with other 
 
 	// TODO: reset sending variables, enable ISR for sending here? yes
