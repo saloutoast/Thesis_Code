@@ -17,13 +17,20 @@ int main(void) {
 	PORTB &=~(1<<6);
 	PORTB &=~(1<<7);
 
-	//PORTB |= (1<<PORTB0);
-	//PORTB |= (1<<PORTB1); // turn on middle LED
-	//PORTB |= (1<<PORTB2);
-
 	DDRC=0;
 	PORTC=0;
 	DDRC = (1<<DDC3);
+
+	// test power by turning on LEDs
+	PORTB |= (1<<PORTB0); // green
+	PORTB |= (1<<PORTB1); // yellow
+	PORTB |= (1<<PORTB2); // red
+	
+	_delay_ms(200);  
+
+	PORTB &= ~(1<<PORTB0); // turn off LEDs
+	PORTB &= ~(1<<PORTB1);
+	PORTB &= ~(1<<PORTB2);
 	
 	int ii=0;
 	while(1) {
@@ -60,4 +67,27 @@ int main(void) {
 
 	}
 
+}
+
+// "move" by detaching magnet for a specified time in ms
+void detach(int time) {
+
+	//switch E.P.M. direction 1 (detach)
+	PORTB |= (1<<PORTB0); // set inner LED, indicating direction 1
+	PORTB |= (1<<6);//activate E.P.M direction 1
+	_delay_us(80);//leave on for 80us
+	PORTB &=~(1<<6);//deactivate E.P.M
+	PORTB &=~(1<<7);//deactivate E.P.M
+
+	_delay_ms(time); // stay detached for desired time
+
+	//switch E.P.M. direction 2 (re-attach)
+	PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
+	PORTB |= (1<<7);//activate E.P.M direction 2
+	_delay_us(240);//leave on for 80us
+	_delay_us(80);
+	PORTB &=~(1<<6);//deactivate E.P.M
+	PORTB &=~(1<<7);//deactivate E.P.M
+
+	return
 }

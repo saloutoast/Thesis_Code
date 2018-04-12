@@ -26,6 +26,9 @@ static volatile int rcv_time = 0; // neighbor marking variables
 static volatile int near = 0;
 static volatile int far = 0;
 
+#define NUM_NEIGHBORS 5
+static volatile char neighbors[NUM_NEIGHBORS][3]; // array for neighbor information
+
 int main(void) {
 
 	DDRB=0;
@@ -92,12 +95,10 @@ int main(void) {
 	_delay_ms(500);
 	PORTB &= ~(1<<PORTB0); // speed tuning should be complete at this point
 
-	// array for neighbor IDs and headings
-	char neighbors[5][3];
-
-
-
-
+	
+	
+	
+	
 	int cur_time = 0;
 
 	// at 140 rpm, period should be about 3344 timer1 counts
@@ -109,23 +110,38 @@ int main(void) {
 	while(1) {
 		//neighbor marking based on times of messages received, use Timer1
 
+		if (rcv_sx==1) { // got a new message
 
-		//////// Desired loop: //////////
-		
-		// if new message...
-		// 	 check neighbor table
-		//		if first neighbor or pillar -> use for rotation timing and relative headings (should know rotation speed)
-		//		if existing neighbor -> update heading value (angle? time?)
-		//		if new neighbor -> add to table with heading value
+			int rr=0;
+			for (rr=0;rr<NUM_NEIGHBORS;rr++) { // check rows in neighbor table
+				if (lastRcv == neighbors[rr][0]) { // already received a message from this neighbor
+					neighbors[rr][1] = 0;
+					neighbors[rr][1] |= rcv_time;
+					// update time/heading and recalculate time for LED to turn on?
+					break;
+				} else if (neighbors[rr][0] != 0) { // that row in the table contains data about a different neighbor
+					continue;
+				} else { // if the message is from a new neighbor, create a new entry in the table
 
-		// check current heading (use Timer1 as an approximation)
-		// look through table comlumn, blink LEDs (unique combinations?) at correct headings of neighbors
+					neighbors[rr][0] |= lastRcv;
+					// store time/heading and calculate time for LED to turn on as well
+
+					break;
+				}
+			}
+
+		}
+
+		// check current heading/time
+
+		// check neighbor table to see if any combination of LEDs should be turned on/off
 
 		// send ID message again
-		
-		/////////////////////////////////
+	
 
-		// two robots, based on timing
+
+
+		/* // two robot communication, based on timing
 		if (rcv_sx==1) { // got a new message
 
 			// if the LEDs are in line with the other module
@@ -136,7 +152,7 @@ int main(void) {
 				PORTB &= ~(1<<PORTB0);
 			}
 
-		}
+		} */
 
 	}
 
@@ -190,6 +206,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				//if (lastRcv==toRcv1) { PORTB |= (1<<PORTB2); }
 				//if (lastRcv==toRcv2) { PORTB |= (1<<PORTB0); }
 
+				rcv_time = 0;
 				rcv_time |= TCNT1;
 
 				if (rcv_time >= 1000) {
@@ -197,10 +214,9 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 					far = 3*near;
 				}
 
-
-				TCNT1 = 0; // reset timer1 on received messages 
 				// TODO: more robust, able to handle multiple neighbors...only reset on first neighbor in table
-				rcv_time = 0;
+				TCNT1 = 0; // reset timer1 on received messages 
+				
 
 				rcving = 0; // reset receiving variables
 				TCNT2 = 0;
