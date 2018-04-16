@@ -80,8 +80,7 @@ int main(void) {
 	
 	sei(); // enable interrupts	
 
-
-
+	/*
 	// tuning period to start spinning robot and tune speed of table to 180rpm
 	int ww = 0;
 	while (ww<45) { // tune for 15 seconds
@@ -94,10 +93,7 @@ int main(void) {
 	PORTB |= (1<<PORTB0); // green
 	_delay_ms(500);
 	PORTB &= ~(1<<PORTB0); // speed tuning should be complete at this point
-
-	
-	
-	
+	*/	
 	
 	int cur_time = 0;
 
@@ -209,14 +205,13 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				rcv_time = 0;
 				rcv_time |= TCNT1;
 
-				if (rcv_time >= 1000) {
+				/* if (rcv_time >= 1000) {
 					near = rcv_time/4;
 					far = 3*near;
-				}
+				} */
 
 				// TODO: more robust, able to handle multiple neighbors...only reset on first neighbor in table
-				TCNT1 = 0; // reset timer1 on received messages 
-				
+				TCNT1 = 0; // reset timer1 on received messages (MOVE THIS RESET TO MAIN LOOP)
 
 				rcving = 0; // reset receiving variables
 				TCNT2 = 0;
@@ -275,7 +270,7 @@ ISR(TIMER0_COMPA_vect) { // timer0 interrupt routine
 			bits_sent+=1; // increment bits_sent for timing between messages
 		}
 		
-		// TODO: could disable ISR here, for send_msg function?
+		// TODO: could disable ISR (clear some bit) here, for send_msg function?
 	}
 
 }

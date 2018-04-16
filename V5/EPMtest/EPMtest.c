@@ -36,11 +36,11 @@ int main(void) {
 	while(1) {
 		// loop
 		
-		//switch E.P.M. direction 1 
+		//switch E.P.M. direction 1 (turn on magnet)
 		PORTB |= (1<<PORTB0); // set inner LED, indicating direction 1
 		PORTB |= (1<<PORTB1); // set middle LED
 		PORTB |= (1<<6);//activate E.P.M direction 1
-		_delay_us(80);//leave on for 80us
+		_delay_us(120);//leave on for 120us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB &= ~(1<<PORTB1); //clear middle LED
@@ -50,12 +50,11 @@ int main(void) {
 			ii++;
 		}		
 		
-		//switch E.P.M. direction 2
+		//switch E.P.M. direction 2 (turn off magnet)
 		PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
 		PORTB |= (1<<PORTB2); // set outer LED
 		PORTB |= (1<<7);//activate E.P.M direction 2
-		_delay_us(240);//leave on for 80us
-		_delay_us(80);
+		_delay_us(120);//leave on for 120us
 		PORTB &=~(1<<6);//deactivate E.P.M
 		PORTB &=~(1<<7);//deactivate E.P.M
 		PORTB &= ~(1<<PORTB2); // clear outer LED
@@ -89,5 +88,5 @@ void detach(int time) {
 	PORTB &=~(1<<6);//deactivate E.P.M
 	PORTB &=~(1<<7);//deactivate E.P.M
 
-	return
+	return;
 }
