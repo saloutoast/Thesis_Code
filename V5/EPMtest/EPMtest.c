@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <util/delay.h>
 
+void detach(double);
+
 int main(void) {
 
 	DDRB=0;
@@ -36,29 +38,13 @@ int main(void) {
 	while(1) {
 		// loop
 		
-		//switch E.P.M. direction 1 (detach)
-		PORTB |= (1<<PORTB0); // set inner LED, indicating direction 1
-		PORTB |= (1<<PORTB1); // set middle LED
-		PORTB |= (1<<6);//activate E.P.M direction 1
-		_delay_us(120);//leave on for 120us
-		PORTB &=~(1<<6);//deactivate E.P.M
-		PORTB &=~(1<<7);//deactivate E.P.M
-		PORTB &= ~(1<<PORTB1); //clear middle LED
-		ii = 0;
+		detach(10); //move for 10ms
 		while (ii<10) {
 			_delay_ms(100);//delay 1s
 			ii++;
 		}		
 		
-		//switch E.P.M. direction 2 (re-attach)
-		PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
-		PORTB |= (1<<PORTB2); // set outer LED
-		PORTB |= (1<<7);//activate E.P.M direction 2
-		_delay_us(120);//leave on for 120us
-		PORTB &=~(1<<6);//deactivate E.P.M
-		PORTB &=~(1<<7);//deactivate E.P.M
-		PORTB &= ~(1<<PORTB2); // clear outer LED
-		ii = 0;
+		detach(20); //move for 20ms
 		while (ii<10) {
 			_delay_ms(100);//delay 1s
 			ii++;
@@ -69,7 +55,7 @@ int main(void) {
 }
 
 // "move" by detaching magnet for a specified time in ms
-void detach(int time) {
+void detach(double time) {
 
 	//switch E.P.M. direction 1 (detach)
 	PORTB |= (1<<PORTB0); // set inner LED, indicating direction 1
