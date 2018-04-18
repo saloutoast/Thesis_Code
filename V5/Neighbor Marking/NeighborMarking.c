@@ -1,5 +1,5 @@
 #define F_CPU 8000000UL
-//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:IRComms.hex -F
+//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:NeighborMarking.hex -F
 //write fuses: -U lfuse:w:0xE2:m -F
 
 #include <avr/io.h>
@@ -18,9 +18,11 @@ static volatile int bits_sent = 0; // variables for sending ISR
 static volatile int new_bit = 0;
 static volatile int pause = 0;
 
-static volatile char toSend = 0xAB; // message variables/IDs: 0x83, 0x85, 0x87
-static volatile char toRcv1 = 0xDB;
-static volatile char toRcv2 = 0xA5;
+static volatile char toSend = 0x93; // message variables/IDs: 0x83, 0x85, 0x87
+static volatile char ID1 = 0xAB;
+static volatile char ID2 = 0x93;
+static volatile char ID3 = 0xD5;
+static volatile char ID4 = 0xC9;
 
 static volatile int rcv_time = 0; // neighbor marking variables
 static volatile int near = 0;
@@ -106,7 +108,29 @@ int main(void) {
 	while(1) {
 		//neighbor marking based on times of messages received, use Timer1
 
-		if (rcv_sx==1) { // got a new message
+		if (rcv_sx==1) { // new message
+			if (lastRcv==ID1) {
+				// turn on red LED only
+				PORTB |= (1<<PORTB2);
+				//PORTB &= ~(1<<PORTB1);
+				PORTB &= ~(1<<PORTB0);
+			} else if (lastRcv==ID2) {
+				// turn on green LED
+				PORTB &= ~(1<<PORTB2);
+				//PORTB &= ~(1<<PORTB1);
+				PORTB |= (1<<PORTB0);
+			
+			} else if (lastRcv==ID4) {
+				// turn on red and green LEDs
+				PORTB |= (1<<PORTB2);
+				//PORTB &= ~(1<<PORTB1);
+				PORTB |= (1<<PORTB0);
+			}
+		}	
+		
+		
+		
+		/*if (rcv_sx==1) { // got a new message
 
 			int rr=0;
 			for (rr=0;rr<NUM_NEIGHBORS;rr++) { // check rows in neighbor table
@@ -126,7 +150,7 @@ int main(void) {
 				}
 			}
 
-		}
+		} */
 
 		// check current heading/time
 
@@ -197,10 +221,12 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				lastRcv |= rcvd; // store message
 
 				// turn on LEDs for success
+				//PORTB |= (1<<PORTB0);
 				PORTB |= (1<<PORTB1);
+				//PORTB |= (1<<PORTB2);
 				//PORTB &= ~(1<<PORTB0);
-				//if (lastRcv==toRcv1) { PORTB |= (1<<PORTB2); }
-				//if (lastRcv==toRcv2) { PORTB |= (1<<PORTB0); }
+				//if (lastRcv==ID1) { PORTB |= (1<<PORTB2); }
+				//if (lastRcv==ID2) { PORTB |= (1<<PORTB0); }
 
 				rcv_time = 0;
 				rcv_time |= TCNT1;
@@ -240,6 +266,7 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 	rcvd = 0;
 	//PORTB &= ~(1<<PORTB0);
 	PORTB &= ~(1<<PORTB1);
+	//PORTB &= ~(1<<PORTB2);
 
 }
 
