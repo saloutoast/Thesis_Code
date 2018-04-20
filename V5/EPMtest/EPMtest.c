@@ -15,15 +15,15 @@ static volatile char rcving = 0;
 static volatile char bit_time = 0;
 static volatile int rcv_sx = 0;
 static volatile char lastRcv = 0;
-static volatile int rcv_ct = 0;
+static volatile char rcv_ct = 0;
 
 static volatile int bits_sent = 0; // variables for sending ISR
 static volatile int new_bit = 0;
 static volatile int pause = 0;
 
 static volatile char toSend = 0xAB; // message variables
-static volatile char toRcv1 = 0xDB;
-static volatile char toRcv2 = 0xA5;
+static volatile char beaconID = 0xAB;
+static volatile char mobileID = 0xC9;
 
 
 static volatile int rcv_time = 0; // neighbor marking variables
@@ -108,46 +108,47 @@ int main(void) {
 	while(1) {
 		// loop
 		// take 10 messages to calculate period
-		/*if ((rcv_ct <=10) && (rcv_sx==1)) {
-
-			if (rcv_time>1000) {
-				per = (9*per)+rcv_time;
-				per = per/10;
-
-				if (rcv_ct==10) {
+		if ((rcv_sx==1) && (rcv_ct<10)) {
+			PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
+			if (rcv_time>700) {
+				per = (per+rcv_time)/2;
+				if (rcv_ct==9) {
 					detach_time = per/5; // time after receiving a message that it will detach the EPM
 				}
-
 				rcv_ct+=1;
 			}
-
+			rcv_sx=0;
 		}
 
-		//move towards received message, use Timer1
-		if ((rcv_ct > 10) && (rcv_sx==1)) { // got a new message
+		
+		if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message
+			PORTB &= ~(1<<PORTB2); // clear LED to indicate end of calibration
+			if(lastRcv==beaconID) { // if the beacon is sensed
+				// if the weight is perpendicular to the desired line of motion, detach
+				cur_time = 0;
+				cur_time |= TCNT1;
+				if ( (cur_time<detach_time)&(cur_time>detach_time-20) ) { // within a small window of the detach time
+						
+					detach(100);
 
-			// if the weight is perpendicular to the desired line of motion
-			cur_time = 0;
-			cur_time |= TCNT1;
-			//if ( (cur_time < (detach_time+5))&(cur_time > (detach_time-5)) ) { // within a small window of the detach time
-			//	detach(150);
-			//}
+				}
+			} else {
+				// do nothing?
+			}
+			
+		}
 
-
-
-
+		/* if (rcv_sx==1) {
 			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
 				PORTB |= (1<<PORTB0);
 			} else {
 				PORTB &= ~(1<<PORTB0);
 			}
-
-		} */
+		}  */
 		
-		// each cycle hould take 750ms total (~160 rpm)
+		/*// each cycle hould take 750ms total (~160 rpm)
 		detach(10); //move for 100ms
-
-		_delay_ms(600);
+		_delay_ms(600); */
 
 	}
 
@@ -205,10 +206,10 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				rcv_time = 0;
 				rcv_time |= TCNT1;
 
-				if (rcv_time >= 1000) {
+				/* if (rcv_time >= 1000) {
 					near = rcv_time/4;
 					far = 3*near;
-				}
+				} */
 
 				TCNT1 = 0; // reset timer1 on received messages
 				

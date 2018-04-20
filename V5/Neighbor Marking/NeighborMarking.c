@@ -18,7 +18,7 @@ static volatile int bits_sent = 0; // variables for sending ISR
 static volatile int new_bit = 0;
 static volatile int pause = 0;
 
-static volatile char toSend = 0x93; // message variables/IDs: 0x83, 0x85, 0x87
+static volatile char toSend = 0xC9; // message variables/IDs: 0x83, 0x85, 0x87
 static volatile char ID1 = 0xAB;
 static volatile char ID2 = 0x93;
 static volatile char ID3 = 0xD5;
@@ -119,7 +119,6 @@ int main(void) {
 				PORTB &= ~(1<<PORTB2);
 				//PORTB &= ~(1<<PORTB1);
 				PORTB |= (1<<PORTB0);
-			
 			} else if (lastRcv==ID4) {
 				// turn on red and green LEDs
 				PORTB |= (1<<PORTB2);

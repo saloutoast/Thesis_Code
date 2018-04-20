@@ -283,7 +283,6 @@ _delay_loop_2(uint16_t __count)
  184:	07 c0       	rjmp	.+14     	; 0x194 <main+0xee>
 				//PORTB &= ~(1<<PORTB1);
 				PORTB |= (1<<PORTB0);
-			
 			} else if (lastRcv==ID4) {
  186:	90 91 10 01 	lds	r25, 0x0110
  18a:	80 91 03 01 	lds	r24, 0x0103
