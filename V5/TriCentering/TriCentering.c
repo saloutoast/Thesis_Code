@@ -84,6 +84,9 @@ int main(void) {
 	PORTB &= ~(1<<PORTB2);
 	PORTC &= ~(1<<PORTC3);
 
+	// make sure EPM is activated at startup
+	reset_EPM();
+
 	// wait here for a time (~20s) until all modules are spinning, then blink LEDs again
 	int ww=0;
 	while (ww<300) {
@@ -136,7 +139,7 @@ int main(void) {
 			// rotation A: take in three messages, calculate "angles" (times between receptions)
 			// rotation B: move towards selected beacon (towards beacon not asociated with the largest angle)
 		
-			/*if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
+			if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
 				if (beacons_rcvd < 3) { // store times from the three beacons in a row
 					if (lastRcv==beaconID1) { // if other two times are 0, store time and add to beacons rcvd; else reset
 						if ((beacons_rcvd==0) && (beaconID2_time==0) && (beaconID3_time==0)) {
@@ -150,7 +153,7 @@ int main(void) {
 								beaconID2_time = 0;
 								beaconID3_time = 0;
 								beacons_rcvd = 0;
-								PORTB &= ~(1<<PORTB0);
+								PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
 							}
 						}
 					}
@@ -158,13 +161,15 @@ int main(void) {
 						if ((beacons_rcvd==1) && (beaconID3_time==0) && (beaconID1_time>0)) {
 							beaconID2_time |= rcv_time;
 							beacons_rcvd = 2;
+							PORTB |= (1<<PORTB2);
+							PORTB &= ~(1<<PORTB0);
 						} else {
 							if (rcv_time > 100) {
 								beaconID1_time = 0;
 								beaconID2_time = 0;
 								beaconID3_time = 0;
 								beacons_rcvd = 0;
-								PORTB &= ~(1<<PORTB0);
+								PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
 							}
 						}
 					}
@@ -172,26 +177,27 @@ int main(void) {
 						if ((beacons_rcvd==2) && (beaconID1_time>0) && (beaconID2_time>0)) {
 							beaconID3_time |= rcv_time;
 							beacons_rcvd = 3;
+							PORTB |= (1<<PORTB2)|(1<<PORTB0);
 						} else {
 							if (rcv_time > 100) {
 								beaconID1_time = 0;
 								beaconID2_time = 0;
 								beaconID3_time = 0;
 								beacons_rcvd = 0;
-								PORTB &= ~(1<<PORTB0);
+								PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
 							}
 						}
 					}
 				}
 				rcv_sx = 0;
-			} */
+			}
 
 			// if 3->1 (beaconID1_time) is the longest time, move to beacon 2
 			// if 1->2 (beaconID2_time) is the longest time, move to beacon 3
 			// if 2->3 (beaconID3_time) is the longest time, move to beacon 1
 
 			// calculate movement
-			if ((rcv_sx==1)&&(rcv_ct==10)) {
+			/*if ((rcv_sx==1)&&(rcv_ct==10)) {
 
 				beacons_rcvd = 3;
 
@@ -241,7 +247,7 @@ int main(void) {
 					}
 				}
 				rcv_sx=0;
-			}
+			} */
 		
 			/*	if(lastRcv==beaconID) { // if the beacon is sensed
 					// if the weight is perpendicular to the desired line of motion, detach
