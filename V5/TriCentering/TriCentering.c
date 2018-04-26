@@ -33,7 +33,7 @@ static volatile int beaconID2_time = 0;
 static volatile int beaconID3_time = 0;
 static volatile char beacons_rcvd = 0;
 static volatile char desired_beacon = 0;
-static volatile int center_threshold = 100;
+static volatile int center_threshold = 10;
 
 int main(void) {
 
@@ -74,16 +74,18 @@ int main(void) {
 	PORTB |= (1<<PORTB0); // green
 	PORTB |= (1<<PORTB1); // yellow
 	PORTB |= (1<<PORTB2); // red
+	PORTC |= (1<<PORTC3);
 	
 	_delay_ms(200);  
 
 	PORTB &= ~(1<<PORTB0); // turn off LEDs
 	PORTB &= ~(1<<PORTB1);
 	PORTB &= ~(1<<PORTB2);
+	PORTC &= ~(1<<PORTC3);
 
 	// wait here for a time (~20s) until all modules are spinning, then blink LEDs again
 	int ww=0;
-	while (ww<200) {
+	while (ww<300) {
 
 		_delay_ms(100);
 		ww+=1;
@@ -106,118 +108,167 @@ int main(void) {
 	int per = 0;
 	//int cur_time = 0;
 	int detach_time = 0;
+	int dd = 0;
 	
 	while(1) { // main loop
+
+		if (toSend==mobileID) { // don't bother trying to track beacons if you are not the mobile robot
 		
-		// take 10 messages to calculate period		
-		if ((rcv_sx==1) && (rcv_ct<10)) {
-			if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
-				PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
-				if (rcv_time>700) {
-					per = (per+rcv_time)/2;
-					if (rcv_ct==9) {
-						detach_time = per/5; // time after receiving a message that it will detach the EPM
-						detach_time = detach_time/8; // convert roughly to ms
-						PORTB &= ~(1<<PORTB2); // clear LED to indicate end of calibration
+			// take 10 messages to calculate period		
+			if ((rcv_sx==1) && (rcv_ct<10)) {
+				if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
+					PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
+					if (rcv_time>700) {
+						per = (per+rcv_time)/2;
+						if (rcv_ct==9) {
+							detach_time = per/5; // time after receiving a message that it will detach the EPM
+							//detach_time = detach_time/8; // convert roughly to ms
+							PORTB &= ~(1<<PORTB2); // clear LED to indicate end of calibration
+						}
+						rcv_ct+=1;	
 					}
-					rcv_ct+=1;	
+					rcv_sx=0;
+				}
+			}
+
+			// calculate angles based on times between beacon messages, then pick beacon to move towards
+			// rotation A: take in three messages, calculate "angles" (times between receptions)
+			// rotation B: move towards selected beacon (towards beacon not asociated with the largest angle)
+		
+			/*if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
+				if (beacons_rcvd < 3) { // store times from the three beacons in a row
+					if (lastRcv==beaconID1) { // if other two times are 0, store time and add to beacons rcvd; else reset
+						if ((beacons_rcvd==0) && (beaconID2_time==0) && (beaconID3_time==0)) {
+							beaconID1_time |= rcv_time;
+							beacons_rcvd = 1;
+							PORTB |= (1<<PORTB0);
+
+						} else {
+							if (rcv_time > 100) {
+								beaconID1_time = 0;
+								beaconID2_time = 0;
+								beaconID3_time = 0;
+								beacons_rcvd = 0;
+								PORTB &= ~(1<<PORTB0);
+							}
+						}
+					}
+					else if (lastRcv==beaconID2) { // if time3 is zero and time1 is not 0, store time and add to beacons rcvd; else ignore
+						if ((beacons_rcvd==1) && (beaconID3_time==0) && (beaconID1_time>0)) {
+							beaconID2_time |= rcv_time;
+							beacons_rcvd = 2;
+						} else {
+							if (rcv_time > 100) {
+								beaconID1_time = 0;
+								beaconID2_time = 0;
+								beaconID3_time = 0;
+								beacons_rcvd = 0;
+								PORTB &= ~(1<<PORTB0);
+							}
+						}
+					}
+					else if (lastRcv==beaconID3) { // if other two times are not zero, store time and add to beacons rcvd; else ignore
+						if ((beacons_rcvd==2) && (beaconID1_time>0) && (beaconID2_time>0)) {
+							beaconID3_time |= rcv_time;
+							beacons_rcvd = 3;
+						} else {
+							if (rcv_time > 100) {
+								beaconID1_time = 0;
+								beaconID2_time = 0;
+								beaconID3_time = 0;
+								beacons_rcvd = 0;
+								PORTB &= ~(1<<PORTB0);
+							}
+						}
+					}
+				}
+				rcv_sx = 0;
+			} */
+
+			// if 3->1 (beaconID1_time) is the longest time, move to beacon 2
+			// if 1->2 (beaconID2_time) is the longest time, move to beacon 3
+			// if 2->3 (beaconID3_time) is the longest time, move to beacon 1
+
+			// calculate movement
+			if ((rcv_sx==1)&&(rcv_ct==10)) {
+
+				beacons_rcvd = 3;
+
+				if (beacons_rcvd==3) {
+
+					beaconID1_time = 1000; // move towards beaconID2, if this is largest
+					beaconID2_time = 1000; // move towards beaconID3, if this is largest
+					beaconID3_time = 1000; // move towards beaconID1, if this is largest
+						
+
+					if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
+						desired_beacon |= beaconID2;
+					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
+						desired_beacon |= beaconID3;
+					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
+						desired_beacon |= beaconID1;
+					} else { // within centering threshold, end of program
+						while(1) { 
+							PORTB |= (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2); 
+						}
+					}
+
+					beacons_rcvd=4; // indicated that direction of motion has been decided
+					
+				}
+				// execute movement
+				if (beacons_rcvd==4) {
+					if(lastRcv==desired_beacon) { // if last message is from desired beacon -> start movement sequence
+						cli(); // disable all interrupts so that movement can be executed
+						PORTB |= (1<<PORTB2);
+
+						// delay for detach time
+						dd = 0;
+						while (dd<detach_time) {
+							_delay_us(140);
+							dd+=1;
+						}					
+						detach(100);
+						// reset movement variables
+						beaconID1_time = 0;
+						beaconID2_time = 0;
+						beaconID3_time = 0;
+						beacons_rcvd = 0;
+						desired_beacon = 0;
+						PORTB &= ~(1<<PORTB2);
+						sei(); // re-enable interrupts again to plan next movement
+					}
 				}
 				rcv_sx=0;
 			}
-		}
-
-		// calculate angles based on times between beacon messages, then pick beacon to move towards
-		// rotation A: take in three messages, calculate "angles" (times between receptions)
-		// rotation B: move towards selected beacon (towards beacon not asociated with the largest angle)
 		
-		if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
-			if (beacons_rcvd < 3) { // store times from the three beacons in a row
-				if (lastRcv==beaconID1) { // if other two times are 0, store time and add to beacons rcvd; else ignore
-					if ((beaconID2_time==0) && (beaconID3_time==0)) {
-						beaconID1_time |= rcv_time;
-						beacons_rcvd = 1;
-					}
-				}
-				else if (lastRcv==beaconID2) { // if time3 is zero and time1 is not 0, store time and add to beacons rcvd; else ignore
-					if ((beaconID3_time==0) && (beaconID1_time>0)) {
-						beaconID2_time |= rcv_time;
-						beacons_rcvd = 2;
-					}
-				}
-				else if (lastRcv==beaconID3) { // if other two times are not zero, store time and add to beacons rcvd; else ignore
-					if ((beaconID1_time>0) && (beaconID2_time>0)) {
-						beaconID3_time |= rcv_time;
-						beacons_rcvd = 3;
-					}
-				}
-			}
-			rcv_sx = 0;
-		}
-
-		// if 3->1 (beaconID1_time) is the longest time, move to beacon 2
-		// if 1->2 (beaconID2_time) is the longest time, move to beacon 3
-		// if 2->3 (beaconID3_time) is the longest time, move to beacon 1
-
-		// calculate movement
-		if (beacons_rcvd==3) {
-
-			if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
-				desired_beacon |= beaconID2;
-			} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
-				desired_beacon |= beaconID3;
-			} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
-				desired_beacon |= beaconID1;
-			} else { // within centering threshold, end of program
-				while(1) { 
-					PORTB |= (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2); 
-				}
-			}
-			beacons_rcvd=4; // indicated that direction of motion has been decided
-			PORTB |= (1<<PORTB2);
-		}
-		// execute movement
-		if (beacons_rcvd==4) {
-			if(lastRcv==desired_beacon) { // if last message is from desired beacon -> start movement sequence
-				cli(); // disable all interrupts so that movement can be executed
-				_delay_ms(detach_time-50);
-				detach(100);
-				// reset movement variables
-				beaconID1_time = 0;
-				beaconID2_time = 0;
-				beaconID3_time = 0;
-				beacons_rcvd = 0;
-				desired_beacon = 0;
-				PORTB &= ~(1<<PORTB2);
-				sei(); // re-enable interrupts again to plan next movement
-			}
-		}
-		
-		/*	if(lastRcv==beaconID) { // if the beacon is sensed
-				// if the weight is perpendicular to the desired line of motion, detach
-				cur_time = 0;
-				cur_time |= TCNT1;
-				if ( (cur_time<detach_time)&(cur_time>detach_time-20) ) { // within a small window of the detach time
+			/*	if(lastRcv==beaconID) { // if the beacon is sensed
+					// if the weight is perpendicular to the desired line of motion, detach
+					cur_time = 0;
+					cur_time |= TCNT1;
+					if ( (cur_time<detach_time)&(cur_time>detach_time-20) ) { // within a small window of the detach time
 						
-					detach(100);
+						detach(100);
 
+					}
+				} else {
+					// do nothing?
 				}
-			} else {
-				// do nothing?
-			}
 			
-		} */
+			} */
 
-		/* if (rcv_sx==1) {
-			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
-				PORTB |= (1<<PORTB0);
-			} else {
-				PORTB &= ~(1<<PORTB0);
-			}
-		}  */
+			/* if (rcv_sx==1) {
+				if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
+					PORTB |= (1<<PORTB0);
+				} else {
+					PORTB &= ~(1<<PORTB0);
+				}
+			}  */
 		
-		// each cycle hould take 400ms total (~160 rpm)
-		//detach(100); //move for 100ms
-		//_delay_ms(300); 
+			// each cycle hould take 400ms total (~160 rpm)
+			//detach(100); //move for 100ms
+			//_delay_ms(300);
+		} 
 
 	}
 
