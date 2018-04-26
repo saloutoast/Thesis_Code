@@ -104,7 +104,7 @@ int main(void) {
 
 	// at 140 rpm, period should be about 3344 timer1 counts
 	int per = 0;
-	int cur_time = 0;
+	//int cur_time = 0;
 	int detach_time = 0;
 	
 	while(1) { // main loop
@@ -126,11 +126,9 @@ int main(void) {
 			}
 		}
 
-		// TODO: calculate angles based on which beacon is being 
-		// should be able to determine next direction from three messages (two times)
-		// pick beacon to move towards in next rotation
-		// rotation A: take in three messages, calculate angles
-		// rotation B: move towards selected beacon (away from largest angle)
+		// calculate angles based on times between beacon messages, then pick beacon to move towards
+		// rotation A: take in three messages, calculate "angles" (times between receptions)
+		// rotation B: move towards selected beacon (towards beacon not asociated with the largest angle)
 		
 		if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
 			if (beacons_rcvd < 3) { // store times from the three beacons in a row
@@ -163,11 +161,11 @@ int main(void) {
 		// calculate movement
 		if (beacons_rcvd==3) {
 
-			if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold)) {
+			if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
 				desired_beacon |= beaconID2;
-			} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold)) {
+			} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 				desired_beacon |= beaconID3;
-			} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold)) {
+			} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 				desired_beacon |= beaconID1;
 			} else { // within centering threshold, end of program
 				while(1) { 
