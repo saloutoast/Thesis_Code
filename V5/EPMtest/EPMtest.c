@@ -8,6 +8,7 @@
 #include <util/delay.h>
 
 void detach(double);
+void reset_EPM(void);
 
 static volatile char distance = 0; // variables for reception ISR
 static volatile char rcvd = 0;
@@ -108,7 +109,7 @@ int main(void) {
 	while(1) {
 		// loop
 		// take 10 messages to calculate period
-		if ((rcv_sx==1) && (rcv_ct<10)) {
+		/* if ((rcv_sx==1) && (rcv_ct<10)) {
 			PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
 			if (rcv_time>700) {
 				per = (per+rcv_time)/2;
@@ -136,7 +137,7 @@ int main(void) {
 				// do nothing?
 			}
 			
-		}
+		} */
 
 		/* if (rcv_sx==1) {
 			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
@@ -295,4 +296,18 @@ void detach(double time) {
 	PORTB &=~(1<<7);//deactivate E.P.M
 
 	return;
+}
+
+// reset EPM in case of robot/code malfunction
+void reset_EPM(void) {
+
+	//switch E.P.M. direction 2 (re-attach)
+	PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
+	PORTB |= (1<<7);//activate E.P.M direction 2
+	_delay_us(120);//leave on for 120us
+	PORTB &=~(1<<6);//deactivate E.P.M
+	PORTB &=~(1<<7);//deactivate E.P.M
+
+	return;
+
 }

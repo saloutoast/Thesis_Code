@@ -8,6 +8,7 @@
 #include <util/delay.h>
 
 void detach(double);
+void reset_EPM(void);
 
 static volatile char distance = 0; // variables for reception ISR
 static volatile char rcvd = 0;
@@ -409,4 +410,18 @@ void detach(double time) {
 	PORTB &=~(1<<7);//deactivate E.P.M
 
 	return;
+}
+
+// reset EPM in case of robot/code malfunction
+void reset_EPM(void) {
+
+	//switch E.P.M. direction 2 (re-attach)
+	PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
+	PORTB |= (1<<7);//activate E.P.M direction 2
+	_delay_us(120);//leave on for 120us
+	PORTB &=~(1<<6);//deactivate E.P.M
+	PORTB &=~(1<<7);//deactivate E.P.M
+
+	return;
+
 }
