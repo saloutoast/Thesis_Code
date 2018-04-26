@@ -1,5 +1,5 @@
 #define F_CPU 8000000UL
-//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:EPMtest.hex -F
+//avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:TriCentering.hex -F
 //write fuses: -U lfuse:w:0xE2:m -F
 
 #include <avr/io.h>
@@ -22,13 +22,18 @@ static volatile int new_bit = 0;
 static volatile int pause = 0;
 
 static volatile char toSend = 0xC9; // message variables
-static volatile char beaconID = 0xAB;
+static volatile char beaconID1 = 0xAB;
+static volatile char beaconID2 = 0x93;
+static volatile char beaconID3 = 0xD5;
 static volatile char mobileID = 0xC9;
 
-
-static volatile int rcv_time = 0; // neighbor marking variables
-static volatile int near = 0;
-static volatile int far = 0;
+static volatile int rcv_time = 0; // neighbor variables
+static volatile int beaconID1_time = 0;
+static volatile int beaconID2_time = 0;
+static volatile int beaconID3_time = 0;
+static volatile char beacons_rcvd = 0;
+static volatile char desired_beacon = 0;
+static volatile int center_threshold = 100;
 
 int main(void) {
 
@@ -57,7 +62,7 @@ int main(void) {
 	TIMSK0 |= (1<<OCIE0A);
 
 	// Initialize timer1 for neighbor-marking, based on times of received messages
-	TCCR1B |= (1<<CS12)|(0<<CS11)|(1<<CS10); // 1/1024 prescaler, counts at ~7.8kHz, 16-bit timer
+	TCCR1B |= (1<<CS12)|(0<<CS11)|(1<<CS10); // 1/1024 prescaler, counts at ~7.8kHz (1 count is 0.128 ms), 16-bit timer
 
 	// Initialize timer2 for timing receiving of messages (1/128 prescaler, 8-bit timer rolls over at ~250 Hz )
 	TCCR2A |= (1<<WGM21); // do not change any output pin, clear at compare match with OCR2A
@@ -76,9 +81,9 @@ int main(void) {
 	PORTB &= ~(1<<PORTB1);
 	PORTB &= ~(1<<PORTB2);
 
-	// wait here for a time (~10s) until all modules are spinning, then blink LEDs again
+	// wait here for a time (~20s) until all modules are spinning, then blink LEDs again
 	int ww=0;
-	while (ww<100) {
+	while (ww<200) {
 
 		_delay_ms(100);
 		ww+=1;
@@ -101,29 +106,95 @@ int main(void) {
 	int per = 0;
 	int cur_time = 0;
 	int detach_time = 0;
-
-	near = 836; // initial guess
-	far = 3*near;
 	
-	while(1) {
-		// loop
-		// take 10 messages to calculate period
+	while(1) { // main loop
+		
+		// take 10 messages to calculate period		
 		if ((rcv_sx==1) && (rcv_ct<10)) {
-			PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
-			if (rcv_time>700) {
-				per = (per+rcv_time)/2;
-				if (rcv_ct==9) {
-					detach_time = per/5; // time after receiving a message that it will detach the EPM
+			if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
+				PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
+				if (rcv_time>700) {
+					per = (per+rcv_time)/2;
+					if (rcv_ct==9) {
+						detach_time = per/5; // time after receiving a message that it will detach the EPM
+						detach_time = detach_time/8; // convert roughly to ms
+						PORTB &= ~(1<<PORTB2); // clear LED to indicate end of calibration
+					}
+					rcv_ct+=1;	
 				}
-				rcv_ct+=1;
+				rcv_sx=0;
 			}
-			rcv_sx=0;
 		}
 
+		// TODO: calculate angles based on which beacon is being 
+		// should be able to determine next direction from three messages (two times)
+		// pick beacon to move towards in next rotation
+		// rotation A: take in three messages, calculate angles
+		// rotation B: move towards selected beacon (away from largest angle)
 		
-		if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message
-			PORTB &= ~(1<<PORTB2); // clear LED to indicate end of calibration
-			if(lastRcv==beaconID) { // if the beacon is sensed
+		if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
+			if (beacons_rcvd < 3) { // store times from the three beacons in a row
+				if (lastRcv==beaconID1) { // if other two times are 0, store time and add to beacons rcvd; else ignore
+					if ((beaconID2_time==0) && (beaconID3_time==0)) {
+						beaconID1_time |= rcv_time;
+						beacons_rcvd = 1;
+					}
+				}
+				else if (lastRcv==beaconID2) { // if time3 is zero and time1 is not 0, store time and add to beacons rcvd; else ignore
+					if ((beaconID3_time==0) && (beaconID1_time>0)) {
+						beaconID2_time |= rcv_time;
+						beacons_rcvd = 2;
+					}
+				}
+				else if (lastRcv==beaconID3) { // if other two times are not zero, store time and add to beacons rcvd; else ignore
+					if ((beaconID1_time>0) && (beaconID2_time>0)) {
+						beaconID3_time |= rcv_time;
+						beacons_rcvd = 3;
+					}
+				}
+			}
+			rcv_sx = 0;
+		}
+
+		// if 3->1 (beaconID1_time) is the longest time, move to beacon 2
+		// if 1->2 (beaconID2_time) is the longest time, move to beacon 3
+		// if 2->3 (beaconID3_time) is the longest time, move to beacon 1
+
+		// calculate movement
+		if (beacons_rcvd==3) {
+
+			if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold)) {
+				desired_beacon |= beaconID2;
+			} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold)) {
+				desired_beacon |= beaconID3;
+			} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold)) {
+				desired_beacon |= beaconID1;
+			} else { // within centering threshold, end of program
+				while(1) { 
+					PORTB |= (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2); 
+				}
+			}
+			beacons_rcvd=4; // indicated that direction of motion has been decided
+			PORTB |= (1<<PORTB2);
+		}
+		// execute movement
+		if (beacons_rcvd==4) {
+			if(lastRcv==desired_beacon) { // if last message is from desired beacon -> start movement sequence
+				cli(); // disable all interrupts so that movement can be executed
+				_delay_ms(detach_time-50);
+				detach(100);
+				// reset movement variables
+				beaconID1_time = 0;
+				beaconID2_time = 0;
+				beaconID3_time = 0;
+				beacons_rcvd = 0;
+				desired_beacon = 0;
+				PORTB &= ~(1<<PORTB2);
+				sei(); // re-enable interrupts again to plan next movement
+			}
+		}
+		
+		/*	if(lastRcv==beaconID) { // if the beacon is sensed
 				// if the weight is perpendicular to the desired line of motion, detach
 				cur_time = 0;
 				cur_time |= TCNT1;
@@ -136,7 +207,7 @@ int main(void) {
 				// do nothing?
 			}
 			
-		}
+		} */
 
 		/* if (rcv_sx==1) {
 			if ( ((cur_time < (near+5))&(cur_time > (near-5))) | ((cur_time < (far+5))&(cur_time > (far-5))) ) {
@@ -146,9 +217,9 @@ int main(void) {
 			}
 		}  */
 		
-		// each cycle hould take 750ms total (~160 rpm)
+		// each cycle hould take 400ms total (~160 rpm)
 		//detach(100); //move for 100ms
-		//_delay_ms(600); 
+		//_delay_ms(300); 
 
 	}
 
@@ -205,12 +276,6 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
 				rcv_time = 0;
 				rcv_time |= TCNT1;
-
-				/* if (rcv_time >= 1000) {
-					near = rcv_time/4;
-					far = 3*near;
-				} */
-
 				TCNT1 = 0; // reset timer1 on received messages
 				
 				rcving = 0; // reset receiving variables
