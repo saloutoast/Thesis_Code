@@ -34,7 +34,7 @@ static volatile int beaconID2_time = 0;
 static volatile int beaconID3_time = 0;
 static volatile char beacons_rcvd = 0;
 static volatile char desired_beacon = 0;
-static volatile int center_threshold = 10;
+static volatile int center_threshold = 50;
 
 int main(void) {
 
@@ -122,7 +122,7 @@ int main(void) {
 			if ((rcv_sx==1) && (rcv_ct<10)) {
 				if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
 					PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
-					if (rcv_time>700) {
+					if (rcv_time>100) {
 						per = (per+rcv_time)/2;
 						if (rcv_ct==9) {
 							detach_time = per/5; // time after receiving a message that it will detach the EPM
@@ -189,33 +189,34 @@ int main(void) {
 						}
 					}
 				}
-				rcv_sx = 0;
-			}
 
-			// if 3->1 (beaconID1_time) is the longest time, move to beacon 2
-			// if 1->2 (beaconID2_time) is the longest time, move to beacon 3
-			// if 2->3 (beaconID3_time) is the longest time, move to beacon 1
+				// if 3->1 (beaconID1_time) is the longest time, move to beacon 2
+				// if 1->2 (beaconID2_time) is the longest time, move to beacon 3
+				// if 2->3 (beaconID3_time) is the longest time, move to beacon 1
 
-			// calculate movement
-			/*if ((rcv_sx==1)&&(rcv_ct==10)) {
-
-				beacons_rcvd = 3;
-
+				// calculate movement
 				if (beacons_rcvd==3) {
 
-					beaconID1_time = 1000; // move towards beaconID2, if this is largest
-					beaconID2_time = 1000; // move towards beaconID3, if this is largest
-					beaconID3_time = 1000; // move towards beaconID1, if this is largest
-						
+					//beaconID1_time = 1000; // move towards beaconID2, if this is largest
+					//beaconID2_time = 1000; // move towards beaconID3, if this is largest
+					//beaconID3_time = 1000; // move towards beaconID1, if this is largest
+					PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 
 					if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
 						desired_beacon |= beaconID2;
+						PORTB |= (1<<PORTB1);
+						//while(1) { cli(); }
 					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 						desired_beacon |= beaconID3;
+						PORTB |= (1<<PORTB2);
+						//while(1) { cli(); }
 					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 						desired_beacon |= beaconID1;
+						PORTB |= (1<<PORTB0);
+						//while(1) { cli(); }
 					} else { // within centering threshold, end of program
 						while(1) { 
+							cli();
 							PORTB |= (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2); 
 						}
 					}
@@ -232,22 +233,23 @@ int main(void) {
 						// delay for detach time
 						dd = 0;
 						while (dd<detach_time) {
-							_delay_us(140);
+							_delay_us(150);
 							dd+=1;
 						}					
-						detach(100);
+						detach(80);
 						// reset movement variables
 						beaconID1_time = 0;
 						beaconID2_time = 0;
 						beaconID3_time = 0;
 						beacons_rcvd = 0;
 						desired_beacon = 0;
-						PORTB &= ~(1<<PORTB2);
+						PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) );
 						sei(); // re-enable interrupts again to plan next movement
 					}
 				}
-				rcv_sx=0;
-			} */
+
+				rcv_sx = 0;
+			}
 		
 			/*	if(lastRcv==beaconID) { // if the beacon is sensed
 					// if the weight is perpendicular to the desired line of motion, detach
