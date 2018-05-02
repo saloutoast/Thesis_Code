@@ -1,6 +1,6 @@
 #define F_CPU 8000000UL
 //avrdude -c usbtiny -B 10 -p m328p -e -U flash:w:TriCentering.hex -F
-//write fuses: -U lfuse:w:0xE2:m -F
+//write fuses:avrdude -c usbtiny -B 10 -p m328p -e -U lfuse:w:0xE2:m -F
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -88,13 +88,13 @@ int main(void) {
 	reset_EPM();
 
 	// wait here for a time (~20s) until all modules are spinning, then blink LEDs again
-	int ww=0;
-	while (ww<300) {
+	/*int ww=0;
+	while (ww<100) {
 
 		_delay_ms(100);
 		ww+=1;
 
-	}
+	}*/
 
 	PORTB |= (1<<PORTB0); // green
 	PORTB |= (1<<PORTB1); // yellow
@@ -113,13 +113,15 @@ int main(void) {
 	//int cur_time = 0;
 	int detach_time = 0;
 	int dd = 0;
+
+	rcv_ct = 10;
 	
 	while(1) { // main loop
 
 		if (toSend==mobileID) { // don't bother trying to track beacons if you are not the mobile robot
 		
 			// take 10 messages to calculate period		
-			if ((rcv_sx==1) && (rcv_ct<10)) {
+			/* if ((rcv_sx==1) && (rcv_ct<10)) {
 				if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
 					PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
 					if (rcv_time>100) {
@@ -133,13 +135,14 @@ int main(void) {
 					}
 					rcv_sx=0;
 				}
-			}
+			} */
 
 			// calculate angles based on times between beacon messages, then pick beacon to move towards
 			// rotation A: take in three messages, calculate "angles" (times between receptions)
 			// rotation B: move towards selected beacon (towards beacon not asociated with the largest angle)
 		
 			if ((rcv_sx==1) && (rcv_ct==10)) { // got a new message and already calibrated
+
 				if (beacons_rcvd < 3) { // store times from the three beacons in a row
 					if (lastRcv==beaconID1) { // if other two times are 0, store time and add to beacons rcvd; else reset
 						if ((beacons_rcvd==0) && (beaconID2_time==0) && (beaconID3_time==0)) {
@@ -205,16 +208,38 @@ int main(void) {
 					if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
 						desired_beacon |= beaconID2;
 						PORTB |= (1<<PORTB1);
-						//while(1) { cli(); }
+						while(1) { 
+							cli();
+							PORTB|=(1<<PORTB1);
+							_delay_ms(250);
+							PORTB&=~(1<<PORTB1);
+							_delay_ms(250);
+						}
 					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 						desired_beacon |= beaconID3;
 						PORTB |= (1<<PORTB2);
-						//while(1) { cli(); }
+						while(1) { 
+							cli();
+							PORTB|=(1<<PORTB2);
+							_delay_ms(250);
+							PORTB&=~(1<<PORTB2);
+							_delay_ms(250);
+						}
 					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 						desired_beacon |= beaconID1;
 						PORTB |= (1<<PORTB0);
-						//while(1) { cli(); }
-					} else { // within centering threshold, end of program
+						while(1) { 
+							cli();
+							PORTB|=(1<<PORTB0);
+							_delay_ms(250);
+							PORTB&=~(1<<PORTB0);
+							_delay_ms(250);
+						}
+					} 
+
+					// handle cases where two times are similar and one is shorter here
+					
+					else { // within centering threshold, end of program
 						while(1) { 
 							cli();
 							PORTB |= (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2); 
