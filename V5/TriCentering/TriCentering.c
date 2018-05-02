@@ -106,6 +106,11 @@ int main(void) {
 	PORTB &= ~(1<<PORTB1);
 	PORTB &= ~(1<<PORTB2);
 
+	// turn on LED corresponing to beacon number
+	if (toSend==beaconID1) { PORTB |= (1<<PORTB0); }
+	if (toSend==beaconID2) { PORTB |= (1<<PORTB1); }
+	if (toSend==beaconID3) { PORTB |= (1<<PORTB2); }
+
 	sei(); // enable interrupts
 
 	// at 140 rpm, period should be about 3344 timer1 counts
@@ -293,7 +298,7 @@ int main(void) {
 						_delay_us(150);
 						dd+=1;
 					}*/
-					_delay_ms(75); // hard-coded delay based on 72 deg at ~165 rpm					
+					_delay_ms(80); // hard-coded delay based on 72 deg at ~165 rpm					
 					detach(80);
 					// reset movement variables
 					beaconID1_time = 0;
