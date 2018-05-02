@@ -87,14 +87,14 @@ int main(void) {
 	// make sure EPM is activated at startup
 	reset_EPM();
 
-	// wait here for a time (~20s) until all modules are spinning, then blink LEDs again
-	/*int ww=0;
-	while (ww<100) {
+	// wait here for a time (~30s) until all modules are spinning, then blink LEDs again
+	int ww=0;
+	while (ww<300) {
 
 		_delay_ms(100);
 		ww+=1;
 
-	}*/
+	}
 
 	PORTB |= (1<<PORTB0); // green
 	PORTB |= (1<<PORTB1); // yellow
@@ -148,7 +148,7 @@ int main(void) {
 						if ((beacons_rcvd==0) && (beaconID2_time==0) && (beaconID3_time==0)) {
 							beaconID1_time |= rcv_time;
 							beacons_rcvd = 1;
-							PORTB |= (1<<PORTB0);
+							//PORTB |= (1<<PORTB0);
 
 						} else {
 							if (rcv_time > 100) {
@@ -156,7 +156,7 @@ int main(void) {
 								beaconID2_time = 0;
 								beaconID3_time = 0;
 								beacons_rcvd = 0;
-								PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
+								//PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
 							}
 						}
 					}
@@ -164,15 +164,15 @@ int main(void) {
 						if ((beacons_rcvd==1) && (beaconID3_time==0) && (beaconID1_time>0)) {
 							beaconID2_time |= rcv_time;
 							beacons_rcvd = 2;
-							PORTB |= (1<<PORTB2);
-							PORTB &= ~(1<<PORTB0);
+							//PORTB |= (1<<PORTB2);
+							//PORTB &= ~(1<<PORTB0);
 						} else {
 							if (rcv_time > 100) {
 								beaconID1_time = 0;
 								beaconID2_time = 0;
 								beaconID3_time = 0;
 								beacons_rcvd = 0;
-								PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
+								//PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
 							}
 						}
 					}
@@ -180,14 +180,14 @@ int main(void) {
 						if ((beacons_rcvd==2) && (beaconID1_time>0) && (beaconID2_time>0)) {
 							beaconID3_time |= rcv_time;
 							beacons_rcvd = 3;
-							PORTB |= (1<<PORTB2)|(1<<PORTB0);
+							//PORTB |= (1<<PORTB2)|(1<<PORTB0);
 						} else {
 							if (rcv_time > 100) {
 								beaconID1_time = 0;
 								beaconID2_time = 0;
 								beaconID3_time = 0;
 								beacons_rcvd = 0;
-								PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
+								//PORTB &= ~( (1<<PORTB0) | (1<<PORTB2) );
 							}
 						}
 					}
@@ -200,13 +200,11 @@ int main(void) {
 				// calculate movement
 				if (beacons_rcvd==3) {
 
-					//beaconID1_time = 1000; // move towards beaconID2, if this is largest
-					//beaconID2_time = 1000; // move towards beaconID3, if this is largest
-					//beaconID3_time = 1000; // move towards beaconID1, if this is largest
-					PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
+					//PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 
 					if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
 						desired_beacon |= beaconID2;
+						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB1);
 						/*while(1) { 
 							cli();
@@ -217,6 +215,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 						desired_beacon |= beaconID3;
+						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB2);
 						/*while(1) { 
 							cli();
@@ -227,6 +226,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 						desired_beacon |= beaconID1;
+						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB0);
 						/*while(1) { 
 							cli();
@@ -235,8 +235,9 @@ int main(void) {
 							PORTB&=~(1<<PORTB0);
 							_delay_ms(250);
 						}*/
-					} else if ((beaconID1_time<(beaconID2_time-center_threshold)) && (beaconID1_time<(beaconID2_time-center_threshold))) {
+					} else if ((beaconID1_time<(beaconID2_time-(center_threshold/5))) && (beaconID1_time<(beaconID2_time-(center_threshold/5)))) {
 						desired_beacon |= beaconID3; // move CW towards beacon 3, then resume centering routine
+						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB2);
 						/*while(1) { 
 							cli();
@@ -245,8 +246,9 @@ int main(void) {
 							PORTB&=~(1<<PORTB2);
 							_delay_ms(250);
 						}*/
-					} else if ((beaconID2_time<(beaconID1_time-center_threshold)) && (beaconID2_time<(beaconID3_time-center_threshold))) {
+					} else if ((beaconID2_time<(beaconID1_time-(center_threshold/5))) && (beaconID2_time<(beaconID3_time-(center_threshold/5)))) {
 						desired_beacon |= beaconID1; // move CW towards beacon 1, then resume centering routine
+						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB0);
 						/*while(1) { 
 							cli();
@@ -255,8 +257,9 @@ int main(void) {
 							PORTB&=~(1<<PORTB0);
 							_delay_ms(250);
 						}*/
-					} else if ((beaconID3_time<(beaconID1_time-center_threshold)) && (beaconID3_time<(beaconID1_time-center_threshold))) {
+					} else if ((beaconID3_time<(beaconID1_time-(center_threshold/5))) && (beaconID3_time<(beaconID1_time-(center_threshold/5)))) {
 						desired_beacon |= beaconID2; // move CW towards beacon 2, then resume centering routine
+						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB1);
 						/*while(1) { 
 							cli();
@@ -275,30 +278,32 @@ int main(void) {
 					beacons_rcvd=4; // indicated that direction of motion has been decided
 					
 				}
+				rcv_sx = 0; // wait for next rotation to execute movement
+			}
+
+			if ((rcv_sx==1)&&(beacons_rcvd==4)) { // now, execute the movement, to ensure correct direction	
 				// execute movement
-				if (beacons_rcvd==4) {
-					if(lastRcv==desired_beacon) { // if last message is from desired beacon -> start movement sequence
-						cli(); // disable all interrupts so that movement can be executed
-						PORTB |= (1<<PORTB2);
+				if((lastRcv==desired_beacon)&&(rcv_time>100)) { // if last message is from desired beacon -> start movement sequence
+					cli(); // disable all interrupts so that movement can be executed
+					//PORTB |= (1<<PORTB2);
 
-						// delay for detach time
-						dd = 0;
-						while (dd<detach_time) {
-							_delay_us(150);
-							dd+=1;
-						}					
-						detach(80);
-						// reset movement variables
-						beaconID1_time = 0;
-						beaconID2_time = 0;
-						beaconID3_time = 0;
-						beacons_rcvd = 0;
-						desired_beacon = 0;
-						PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) );
-						sei(); // re-enable interrupts again to plan next movement
-					}
+					// delay for detach time
+					/*dd = 0;
+					while (dd<detach_time) {
+						_delay_us(150);
+						dd+=1;
+					}*/
+					_delay_ms(75); // hard-coded delay based on 72 deg at ~165 rpm					
+					detach(80);
+					// reset movement variables
+					beaconID1_time = 0;
+					beaconID2_time = 0;
+					beaconID3_time = 0;
+					beacons_rcvd = 0;
+					desired_beacon = 0;
+					PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) );
+					sei(); // re-enable interrupts again to plan next movement
 				}
-
 				rcv_sx = 0;
 			}
 		
@@ -345,7 +350,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 		rcv_sx = 0; // reset success flag
 
 		//PORTB |= (1<<PORTB0); // clear success LEDs from previous message
-		PORTB &= ~(1<<PORTB1);
+		//PORTB &= ~(1<<PORTB1);
 		//PORTB &= ~(1<<PORTB2);
 
 	} else { // first rising edge has been detected (rcving=1)
@@ -378,7 +383,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				lastRcv |= rcvd; // store message
 
 				// turn on LEDs for success
-				PORTB |= (1<<PORTB1);
+				//PORTB |= (1<<PORTB1);
 				//PORTB &= ~(1<<PORTB0);
 				//if (lastRcv==toRcv1) { PORTB |= (1<<PORTB2); }
 				//if (lastRcv==toRcv2) { PORTB |= (1<<PORTB0); }
@@ -413,7 +418,7 @@ ISR(TIMER2_COMPA_vect) { // timer2 interrupt routine
 	rcving = 0;
 	rcvd = 0;
 	//PORTB &= ~(1<<PORTB0);
-	PORTB &= ~(1<<PORTB1);
+	//PORTB &= ~(1<<PORTB1);
 
 }
 
@@ -453,7 +458,7 @@ ISR(TIMER0_COMPA_vect) { // timer0 interrupt routine
 void detach(double time) {
 
 	//switch E.P.M. direction 1 (detach)
-	PORTB |= (1<<PORTB0); // set inner LED, indicating direction 1
+	//PORTB |= (1<<PORTB0); // set inner LED, indicating direction 1
 	PORTB |= (1<<6);//activate E.P.M direction 1
 	_delay_us(120);//leave on for 120us
 	PORTB &=~(1<<6);//deactivate E.P.M
@@ -462,7 +467,7 @@ void detach(double time) {
 	_delay_ms(time); // stay detached for desired time
 
 	//switch E.P.M. direction 2 (re-attach)
-	PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
+	//PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
 	PORTB |= (1<<7);//activate E.P.M direction 2
 	_delay_us(120);//leave on for 120us
 	PORTB &=~(1<<6);//deactivate E.P.M
@@ -475,7 +480,7 @@ void detach(double time) {
 void reset_EPM(void) {
 
 	//switch E.P.M. direction 2 (re-attach)
-	PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
+	//PORTB &= ~(1<<PORTB0); // clear inner LED, indicating direction 2
 	PORTB |= (1<<7);//activate E.P.M direction 2
 	_delay_us(120);//leave on for 120us
 	PORTB &=~(1<<6);//deactivate E.P.M
