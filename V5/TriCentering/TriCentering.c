@@ -130,9 +130,9 @@ int main(void) {
 				if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
 					PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
 					if (rcv_time>100) {
-						per = (per+rcv_time)/2;
+						per = per + (rcv_time/10);
 						if (rcv_ct==9) {
-							detach_time = per/5; // time after receiving a message that it will detach the EPM
+							//detach_time = per/5; // time after receiving a message that it will detach the EPM
 							//detach_time = detach_time/8; // convert roughly to ms
 							PORTB &= ~(1<<PORTB2); // clear LED to indicate end of calibration
 						}
@@ -209,6 +209,7 @@ int main(void) {
 
 					if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
 						desired_beacon |= beaconID2;
+						detach_time = per/5;
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB1);
 						/*while(1) { 
@@ -220,6 +221,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 						desired_beacon |= beaconID3;
+						detach_time = per/5;
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB2);
 						/*while(1) { 
@@ -231,6 +233,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 						desired_beacon |= beaconID1;
+						detach_time = per/5;
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB0);
 						/*while(1) { 
@@ -242,6 +245,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID1_time<(beaconID2_time-(center_threshold/5))) && (beaconID1_time<(beaconID2_time-(center_threshold/5)))) {
 						desired_beacon |= beaconID3; // move CW towards beacon 3, then resume centering routine
+						detach_time = (per/5)+(per/6);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB2);
 						/*while(1) { 
@@ -253,6 +257,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID2_time<(beaconID1_time-(center_threshold/5))) && (beaconID2_time<(beaconID3_time-(center_threshold/5)))) {
 						desired_beacon |= beaconID1; // move CW towards beacon 1, then resume centering routine
+						detach_time = (per/5)+(per/6);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB0);
 						/*while(1) { 
@@ -264,6 +269,7 @@ int main(void) {
 						}*/
 					} else if ((beaconID3_time<(beaconID1_time-(center_threshold/5))) && (beaconID3_time<(beaconID1_time-(center_threshold/5)))) {
 						desired_beacon |= beaconID2; // move CW towards beacon 2, then resume centering routine
+						detach_time = (per/5)+(per/6);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB1);
 						/*while(1) { 
@@ -306,6 +312,7 @@ int main(void) {
 					beaconID3_time = 0;
 					beacons_rcvd = 0;
 					desired_beacon = 0;
+					detach_time = 0;
 					PORTB &= ~( (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0) );
 					sei(); // re-enable interrupts again to plan next movement
 				}
