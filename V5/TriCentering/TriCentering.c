@@ -393,10 +393,24 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 				//if (lastRcv==toRcv1) { PORTB |= (1<<PORTB2); }
 				//if (lastRcv==toRcv2) { PORTB |= (1<<PORTB0); }
 
-				rcv_time = 0;
-				rcv_time |= TCNT1;
-				TCNT1 = 0; // reset timer1 on received messages
-				
+				if (rcv_ct<10) { // during calibration
+					if (lastRcv==beaconID1) {
+						rcv_time = 0;
+						rcv_time |= TCNT1;
+						TCNT1 = 0; // reset timer1 on received messages
+					} else { // ignore message
+						rcv_sx = 0;
+					}
+				} else { // after calibration
+					rcv_time = 0;
+					rcv_time |= TCNT1;
+					TCNT1 = 0; // reset timer1 on received messages
+				}
+
+				// rcv_time = 0;
+				// rcv_time |= TCNT1;
+				// TCNT1 = 0; // reset timer1 on received messages
+					
 				rcving = 0; // reset receiving variables
 				TCNT2 = 0;
 				rcvd = 0;
