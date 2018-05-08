@@ -27,6 +27,7 @@ static volatile char beaconID1 = 0xAB;
 static volatile char beaconID2 = 0x93;
 static volatile char beaconID3 = 0xD5;
 static volatile char mobileID = 0xC9;
+static volatile char centered = 0x99;
 
 static volatile int rcv_time = 0; // neighbor variables
 static volatile int beaconID1_time = 0;
@@ -129,7 +130,7 @@ int main(void) {
 			if ((rcv_sx==1) && (rcv_ct<10)) {
 				if (lastRcv==beaconID1) { // only messages from beacon 1 for calculating period
 					PORTB |= (1<<PORTB2); // turn on LED to indicate calibration
-					if (rcv_time>100) {
+					if ((rcv_time>1000)&&(rcv_time<4000)) {
 						per = per + (rcv_time/10);
 						if (rcv_ct==9) {
 							//detach_time = per/5; // time after receiving a message that it will detach the EPM
@@ -212,73 +213,31 @@ int main(void) {
 						detach_time = per/5;
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB1);
-						/*while(1) { 
-							cli();
-							PORTB|=(1<<PORTB1);
-							_delay_ms(250);
-							PORTB&=~(1<<PORTB1);
-							_delay_ms(250);
-						}*/
 					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 						desired_beacon |= beaconID3;
 						detach_time = per/5;
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB2);
-						/*while(1) { 
-							cli();
-							PORTB|=(1<<PORTB2);
-							_delay_ms(250);
-							PORTB&=~(1<<PORTB2);
-							_delay_ms(250);
-						}*/
 					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 						desired_beacon |= beaconID1;
 						detach_time = per/5;
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB0);
-						/*while(1) { 
-							cli();
-							PORTB|=(1<<PORTB0);
-							_delay_ms(250);
-							PORTB&=~(1<<PORTB0);
-							_delay_ms(250);
-						}*/
-					} else if ((beaconID1_time<(beaconID2_time-(center_threshold/5))) && (beaconID1_time<(beaconID2_time-(center_threshold/5)))) {
+					} else if ((beaconID1_time<(beaconID2_time-(center_threshold))) && (beaconID1_time<(beaconID2_time-(center_threshold)))) {
 						desired_beacon |= beaconID3; // move CW towards beacon 3, then resume centering routine
 						detach_time = (per/5)+(per/6);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
-						PORTB |= (1<<PORTB2);
-						/*while(1) { 
-							cli();
-							PORTB|=(1<<PORTB2);
-							_delay_ms(250);
-							PORTB&=~(1<<PORTB2);
-							_delay_ms(250);
-						}*/
-					} else if ((beaconID2_time<(beaconID1_time-(center_threshold/5))) && (beaconID2_time<(beaconID3_time-(center_threshold/5)))) {
+						PORTB |= ( (1<<PORTB2) | (1<<PORTB1) );
+					} else if ((beaconID2_time<(beaconID1_time-(center_threshold))) && (beaconID2_time<(beaconID3_time-(center_threshold)))) {
 						desired_beacon |= beaconID1; // move CW towards beacon 1, then resume centering routine
 						detach_time = (per/5)+(per/6);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
-						PORTB |= (1<<PORTB0);
-						/*while(1) { 
-							cli();
-							PORTB|=(1<<PORTB0);
-							_delay_ms(250);
-							PORTB&=~(1<<PORTB0);
-							_delay_ms(250);
-						}*/
-					} else if ((beaconID3_time<(beaconID1_time-(center_threshold/5))) && (beaconID3_time<(beaconID1_time-(center_threshold/5)))) {
+						PORTB |= ( (1<<PORTB0) | (1<<PORTB2) );
+					} else if ((beaconID3_time<(beaconID1_time-(center_threshold))) && (beaconID3_time<(beaconID1_time-(center_threshold)))) {
 						desired_beacon |= beaconID2; // move CW towards beacon 2, then resume centering routine
 						detach_time = (per/5)+(per/6);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
-						PORTB |= (1<<PORTB1);
-						/*while(1) { 
-							cli();
-							PORTB|=(1<<PORTB1);
-							_delay_ms(250);
-							PORTB&=~(1<<PORTB1);
-							_delay_ms(250);
-						}*/
+						PORTB |= ( (1<<PORTB1) | (1<<PORTB0) );
 					} else { // within centering threshold, end of program
 						while(1) { 
 							cli();
@@ -299,11 +258,11 @@ int main(void) {
 					//PORTB |= (1<<PORTB2);
 
 					// delay for detach time
-					/*dd = 0;
+					/* dd = 0;
 					while (dd<detach_time) {
-						_delay_us(150);
+						_delay_us(140);
 						dd+=1;
-					}*/
+					} */
 					_delay_ms(80); // hard-coded delay based on 72 deg at ~165 rpm					
 					detach(80);
 					// reset movement variables
