@@ -225,17 +225,17 @@ int main(void) {
 						PORTB |= (1<<PORTB0);
 					} else if ((beaconID1_time<(beaconID2_time-(center_threshold))) && (beaconID1_time<(beaconID2_time-(center_threshold)))) {
 						desired_beacon |= beaconID3; // move CW towards beacon 3, then resume centering routine
-						detach_time = (per/5)+(per/6);
+						detach_time = (per/5)+(per/2);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= ( (1<<PORTB2) | (1<<PORTB1) );
 					} else if ((beaconID2_time<(beaconID1_time-(center_threshold))) && (beaconID2_time<(beaconID3_time-(center_threshold)))) {
 						desired_beacon |= beaconID1; // move CW towards beacon 1, then resume centering routine
-						detach_time = (per/5)+(per/6);
+						detach_time = (per/5)+(per/2);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= ( (1<<PORTB0) | (1<<PORTB2) );
 					} else if ((beaconID3_time<(beaconID1_time-(center_threshold))) && (beaconID3_time<(beaconID1_time-(center_threshold)))) {
 						desired_beacon |= beaconID2; // move CW towards beacon 2, then resume centering routine
-						detach_time = (per/5)+(per/6);
+						detach_time = (per/5)+(per/2);
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= ( (1<<PORTB1) | (1<<PORTB0) );
 					} else { // within centering threshold, end of program
