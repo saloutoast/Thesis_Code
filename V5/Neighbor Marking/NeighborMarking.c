@@ -111,19 +111,19 @@ int main(void) {
 		if (rcv_sx==1) { // new message
 			if (lastRcv==ID1) {
 				// turn on red LED only
-				PORTB |= (1<<PORTB2);
+				//PORTB |= (1<<PORTB2);
 				//PORTB &= ~(1<<PORTB1);
 				PORTB &= ~(1<<PORTB0);
 			} else if (lastRcv==ID2) {
 				// turn on green LED
 				PORTB &= ~(1<<PORTB2);
 				//PORTB &= ~(1<<PORTB1);
-				PORTB |= (1<<PORTB0);
+				//PORTB |= (1<<PORTB0);
 			} else if (lastRcv==ID4) {
 				// turn on red and green LEDs
-				PORTB |= (1<<PORTB2);
+				//PORTB |= (1<<PORTB2);
 				//PORTB &= ~(1<<PORTB1);
-				PORTB |= (1<<PORTB0);
+				//PORTB |= (1<<PORTB0);
 			}
 		}	
 		

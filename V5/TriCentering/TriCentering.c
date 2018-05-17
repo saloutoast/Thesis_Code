@@ -86,7 +86,9 @@ int main(void) {
 	PORTC &= ~(1<<PORTC3);
 
 	// make sure EPM is activated at startup
-	reset_EPM();
+	if (toSend==mobileID) {
+		reset_EPM();
+	}
 
 	// wait here for a time (~30s) until all modules are spinning, then blink LEDs again
 	int ww=0;
@@ -120,7 +122,7 @@ int main(void) {
 	int detach_time = 0;
 	int dd = 0;
 
-	rcv_ct = 10;
+	rcv_ct = 0;
 	
 	while(1) { // main loop
 
@@ -210,38 +212,38 @@ int main(void) {
 
 					if ((beaconID1_time>(beaconID2_time+center_threshold)) && (beaconID1_time>(beaconID2_time+center_threshold))) {
 						desired_beacon |= beaconID2;
-						detach_time = per/5;
+						detach_time = per/5; // move towards beacon 2
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB1);
 					} else if ((beaconID2_time>(beaconID1_time+center_threshold)) && (beaconID2_time>(beaconID3_time+center_threshold))) {
 						desired_beacon |= beaconID3;
-						detach_time = per/5;
+						detach_time = per/5; // move towards beacon 3
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB2);
 					} else if ((beaconID3_time>(beaconID1_time+center_threshold)) && (beaconID3_time>(beaconID1_time+center_threshold))) {
 						desired_beacon |= beaconID1;
-						detach_time = per/5;
+						detach_time = per/5; // move towards beacon 1
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
 						PORTB |= (1<<PORTB0);
 					} else if ((beaconID1_time<(beaconID2_time-(center_threshold))) && (beaconID1_time<(beaconID2_time-(center_threshold)))) {
-						desired_beacon |= beaconID3; // move CW towards beacon 3, then resume centering routine
-						detach_time = (per/5)+(per/2);
+						desired_beacon |= beaconID3;
+						detach_time = (per/5)+(per/2); // move away from beacon 3
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
-						PORTB |= ( (1<<PORTB2) | (1<<PORTB1) );
+						PORTB |= (1<<PORTB2);
 					} else if ((beaconID2_time<(beaconID1_time-(center_threshold))) && (beaconID2_time<(beaconID3_time-(center_threshold)))) {
-						desired_beacon |= beaconID1; // move CW towards beacon 1, then resume centering routine
-						detach_time = (per/5)+(per/2);
+						desired_beacon |= beaconID1; 
+						detach_time = (per/5)+(per/2); // move away from beacon 1
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
-						PORTB |= ( (1<<PORTB0) | (1<<PORTB2) );
+						PORTB |= (1<<PORTB0);
 					} else if ((beaconID3_time<(beaconID1_time-(center_threshold))) && (beaconID3_time<(beaconID1_time-(center_threshold)))) {
-						desired_beacon |= beaconID2; // move CW towards beacon 2, then resume centering routine
-						detach_time = (per/5)+(per/2);
+						desired_beacon |= beaconID2; 
+						detach_time = (per/5)+(per/2); // move away from beacon 2
 						PORTB &= ~( (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2) );
-						PORTB |= ( (1<<PORTB1) | (1<<PORTB0) );
+						PORTB |= (1<<PORTB1);
 					} else { // within centering threshold, end of program
 						while(1) { 
-							cli();
 							PORTB |= (1<<PORTB0) | (1<<PORTB1) | (1<<PORTB2); 
+							toSend = centered;
 						}
 					}
 
@@ -263,7 +265,8 @@ int main(void) {
 						_delay_us(140);
 						dd+=1;
 					} */
-					_delay_ms(80); // hard-coded delay based on 72 deg at ~165 rpm					
+					_delay_ms((detach_time/8)); // delay for detach time
+					//_delay_ms(80); // hard-coded delay based on 72 deg at ~165 rpm					
 					detach(80);
 					// reset movement variables
 					beaconID1_time = 0;
@@ -361,6 +364,7 @@ ISR(ANALOG_COMP_vect) { // essentially the receive_msg() routine
 
 				if (rcv_ct<10) { // during calibration
 					if (lastRcv==beaconID1) {
+						//PORTB |= (1<<PORTB1);
 						rcv_time = 0;
 						rcv_time |= TCNT1;
 						TCNT1 = 0; // reset timer1 on received messages
